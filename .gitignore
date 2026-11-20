@@ -1,0 +1,18 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+
+# Configuração local com segredos (senha do banco e chave do JWT)
+api/src/GestaoLogistica.API/appsettings.Development.json
+
+# Front-end
+node_modules/
+dist/
+*.local
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log

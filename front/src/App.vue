@@ -1,0 +1,83 @@
+<script setup>
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import { computed, ref } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { useMensagemStore } from '@/stores/mensagem';
+import { storeToRefs } from 'pinia';
+
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const mensagemStore = useMensagemStore();
+const { visivel, texto, cor } = storeToRefs(mensagemStore);
+
+const drawer = ref(true);
+
+// O menu só aparece fora da tela de login
+const mostrarMenu = computed(() => route.path !== '/');
+
+const itensMenu = computed(() => {
+  const itens = [
+    { titulo: 'Transportadoras', rota: '/transportadoras', icone: 'mdi-domain' },
+    { titulo: 'Motoristas', rota: '/motoristas', icone: 'mdi-card-account-details' },
+    { titulo: 'Veículos', rota: '/veiculos', icone: 'mdi-truck' },
+    { titulo: 'Clientes', rota: '/clientes', icone: 'mdi-account-group' },
+    { titulo: 'Armazéns', rota: '/armazens', icone: 'mdi-warehouse' },
+    { titulo: 'Produtos', rota: '/produtos', icone: 'mdi-package-variant-closed' },
+    { titulo: 'Estoque', rota: '/estoque', icone: 'mdi-swap-vertical' },
+  ];
+  if (authStore.ehAdministrador) {
+    itens.push({ titulo: 'Usuários', rota: '/usuarios', icone: 'mdi-account-cog' });
+  }
+  return itens;
+});
+
+const sair = () => {
+  authStore.sair();
+  router.push('/');
+}
+</script>
+
+<template>
+  <v-app>
+    <v-app-bar title="Gestão Logística" color="primary">
+      <template v-slot:prepend>
+        <v-app-bar-nav-icon @click="drawer = !drawer" v-if="mostrarMenu" />
+      </template>
+      <template v-slot:append v-if="mostrarMenu">
+        <span class="mr-4 d-none d-sm-inline">
+          <v-icon icon="mdi-account" size="small" class="mr-1"></v-icon>
+          {{ authStore.usuario?.nome }} ({{ authStore.usuario?.perfil }})
+        </span>
+      </template>
+    </v-app-bar>
+
+    <v-navigation-drawer v-model="drawer" v-if="mostrarMenu">
+      <v-list nav density="compact">
+        <v-list-item v-for="item in itensMenu" :key="item.rota" :to="item.rota"
+          :title="item.titulo" :prepend-icon="item.icone" color="primary"></v-list-item>
+      </v-list>
+      <template v-slot:append>
+        <div class="pa-2">
+          <v-btn block color="primary" prepend-icon="mdi-logout" @click="sair">
+            Sair
+          </v-btn>
+        </div>
+      </template>
+    </v-navigation-drawer>
+
+    <v-main>
+      <v-container fluid>
+        <RouterView />
+      </v-container>
+    </v-main>
+
+    <!-- Feedback de todas as operações -->
+    <v-snackbar v-model="visivel" :color="cor" timeout="4000" location="top right">
+      {{ texto }}
+      <template v-slot:actions>
+        <v-btn variant="text" icon="mdi-close" @click="visivel = false"></v-btn>
+      </template>
+    </v-snackbar>
+  </v-app>
+</template>

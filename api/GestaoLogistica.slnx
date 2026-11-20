@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GestaoLogistica.API/GestaoLogistica.API.csproj" />
+    <Project Path="src/GestaoLogistica.Application/GestaoLogistica.Application.csproj" />
+    <Project Path="src/GestaoLogistica.Domain/GestaoLogistica.Domain.csproj" />
+    <Project Path="src/GestaoLogistica.Infrastructure/GestaoLogistica.Infrastructure.csproj" />
+  </Folder>
+</Solution>
