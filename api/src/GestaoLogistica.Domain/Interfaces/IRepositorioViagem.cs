@@ -14,7 +14,11 @@ public interface IRepositorioViagem : IRepositorioBase<Viagem>
     Task<bool> ClientePossuiViagens(int idCliente);
     Task<bool> ArmazemPossuiViagens(int idArmazem);
 
-    // Executa a operação com o motorista e o veículo travados, para que duas pessoas
+    // Executa a operação com o motorista, o veículo e o produto travados, para que duas pessoas
     // não iniciem viagens com eles ao mesmo tempo
-    Task<T> ExecutarComTrava<T>(int idMotorista, int idVeiculo, Func<Task<T>> operacao);
+    Task<T> ExecutarComTrava<T>(int idMotorista, int idVeiculo, int idProduto, Func<Task<T>> operacao);
+
+    // Executa a operação com a viagem, o veículo e o produto dela travados, para que duas pessoas
+    // não mudem a mesma viagem ao mesmo tempo (o estoque seria devolvido duas vezes)
+    Task<T> ExecutarComViagemTravada<T>(int idViagem, Func<Task<T>> operacao);
 }

@@ -12,4 +12,7 @@ public class Veiculo : EntidadeBase
     public decimal CapacidadeCarga { get; set; }
     public string Status { get; set; } = StatusVeiculo.Disponivel;
     public DateTime DataCadastro { get; set; } = DateTime.Now;
+
+    // Regra: a carga não pode passar da capacidade do veículo
+    public bool SuportaCarga(decimal peso) => peso <= CapacidadeCarga;
 }

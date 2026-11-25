@@ -16,7 +16,8 @@ public class RepositorioViagem : RepositorioBase<Viagem>, IRepositorioViagem
             .Include(v => v.Armazem)
             .Include(v => v.Cliente)
             .Include(v => v.Veiculo)
-            .Include(v => v.Motorista);
+            .Include(v => v.Motorista)
+            .Include(v => v.Produto);
     }
 
     public async Task<bool> VeiculoEstaEmViagem(int idVeiculo)
@@ -49,11 +50,32 @@ public class RepositorioViagem : RepositorioBase<Viagem>, IRepositorioViagem
         return await _contexto.Viagens.AnyAsync(v => v.ArmazemId == idArmazem);
     }
 
-    public async Task<T> ExecutarComTrava<T>(int idMotorista, int idVeiculo, Func<Task<T>> operacao)
+    public async Task<T> ExecutarComTrava<T>(int idMotorista, int idVeiculo, int idProduto, Func<Task<T>> operacao)
     {
         await using var transacao = await _contexto.Database.BeginTransactionAsync();
         await _contexto.Database.ExecuteSqlAsync($"SELECT Id FROM Motoristas WHERE Id = {idMotorista} FOR UPDATE");
         await _contexto.Database.ExecuteSqlAsync($"SELECT Id FROM Veiculos WHERE Id = {idVeiculo} FOR UPDATE");
+        await _contexto.Database.ExecuteSqlAsync($"SELECT Id FROM Produtos WHERE Id = {idProduto} FOR UPDATE");
+
+        var resultado = await operacao();
+        await transacao.CommitAsync();
+        return resultado;
+    }
+
+    public async Task<T> ExecutarComViagemTravada<T>(int idViagem, Func<Task<T>> operacao)
+    {
+        await using var transacao = await _contexto.Database.BeginTransactionAsync();
+
+        // Trava na ordem viagem, veículo e produto (STRAIGHT_JOIN mantém essa ordem).
+        // O veículo vem sempre antes do produto, como em ExecutarComTrava, para uma operação
+        // não ficar esperando a outra para sempre.
+        await _contexto.Database.ExecuteSqlAsync($@"
+            SELECT STRAIGHT_JOIN v.Id
+            FROM Viagens v
+            JOIN Veiculos c ON c.Id = v.VeiculoId
+            LEFT JOIN Produtos p ON p.Id = v.ProdutoId
+            WHERE v.Id = {idViagem}
+            FOR UPDATE");
 
         var resultado = await operacao();
         await transacao.CommitAsync();

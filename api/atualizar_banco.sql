@@ -24,3 +24,8 @@ CREATE TABLE IF NOT EXISTS Viagens (
 -- Distância e valor do frete da viagem
 ALTER TABLE Viagens ADD COLUMN DistanciaKm decimal(10,2) NOT NULL DEFAULT 0;
 ALTER TABLE Viagens ADD COLUMN ValorPorKm decimal(10,2) NOT NULL DEFAULT 0;
+
+-- Produto e quantidade da viagem
+ALTER TABLE Viagens ADD COLUMN ProdutoId int NULL;
+ALTER TABLE Viagens ADD COLUMN Quantidade int NOT NULL DEFAULT 0;
+ALTER TABLE Viagens ADD CONSTRAINT FK_Viagens_Produtos_ProdutoId FOREIGN KEY (ProdutoId) REFERENCES Produtos (Id) ON DELETE RESTRICT;

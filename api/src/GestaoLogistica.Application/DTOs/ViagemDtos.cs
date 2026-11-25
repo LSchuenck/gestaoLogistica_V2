@@ -10,6 +10,8 @@ public class ViagemDto
     public string Destino { get; set; } = string.Empty;
     public string Veiculo { get; set; } = string.Empty;
     public string Motorista { get; set; } = string.Empty;
+    public string Produto { get; set; } = string.Empty;
+    public int Quantidade { get; set; }
     public decimal DistanciaKm { get; set; }
     public decimal ValorPorKm { get; set; }
     public decimal Faturamento { get; set; }
@@ -26,6 +28,8 @@ public class ViagemDto
             Destino = viagem.Cliente?.Nome ?? string.Empty,
             Veiculo = viagem.Veiculo?.Placa ?? string.Empty,
             Motorista = viagem.Motorista?.Nome ?? string.Empty,
+            Produto = viagem.Produto?.Descricao ?? string.Empty,
+            Quantidade = viagem.Quantidade,
             DistanciaKm = viagem.DistanciaKm,
             ValorPorKm = viagem.ValorPorKm,
             Faturamento = viagem.CalcularFaturamento(),
@@ -49,6 +53,12 @@ public class IniciarViagemDto
 
     [Range(1, int.MaxValue, ErrorMessage = "Selecione o motorista.")]
     public int MotoristaId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Selecione o produto.")]
+    public int ProdutoId { get; set; }
+
+    [Range(1, 1000000, ErrorMessage = "A quantidade deve ficar entre 1 e 1.000.000.")]
+    public int Quantidade { get; set; }
 
     [Range(0.01, 99999.99, ErrorMessage = "A distância deve ficar entre 0,01 e 99.999,99 km.")]
     public decimal DistanciaKm { get; set; }

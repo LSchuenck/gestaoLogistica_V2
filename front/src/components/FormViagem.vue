@@ -5,6 +5,7 @@
     import { useClienteStore } from '@/stores/cliente';
     import { useVeiculoStore } from '@/stores/veiculo';
     import { useMotoristaStore } from '@/stores/motorista';
+    import { useEstoqueStore } from '@/stores/estoque';
     import { useMensagemStore } from '@/stores/mensagem';
     import { obrigatorio, maiorQueZero } from '@/utils/formulario';
     import { formatarMoeda } from '@/utils/formatacao';
@@ -16,6 +17,7 @@
     const storeCliente = useClienteStore();
     const storeVeiculo = useVeiculoStore();
     const storeMotorista = useMotoristaStore();
+    const storeEstoque = useEstoqueStore();
     const mensagemStore = useMensagemStore();
 
     const formulario = ref(null);
@@ -25,6 +27,8 @@
         clienteId: null,
         veiculoId: null,
         motoristaId: null,
+        produtoId: null,
+        quantidade: '',
         distanciaKm: '',
         valorPorKm: ''
     });
@@ -41,13 +45,22 @@
         return storeMotorista.motoristas.filter(m => m.transportadoraId === veiculo?.transportadoraId && !m.cnhVencida);
     });
 
+    // Produtos com saldo no armazém de origem, com a quantidade disponível no texto
+    const produtosDoArmazem = computed(() =>
+        storeEstoque.saldos
+            .filter(s => s.armazemId === item.value.armazemId)
+            .map(s => ({ id: s.produtoId, texto: `${s.produto} (${s.quantidade} un.)` })));
+
     // Ao trocar o veículo, o motorista precisa ser escolhido de novo
     watch(() => item.value.veiculoId, () => item.value.motoristaId = null);
+
+    // Ao trocar o armazém, o produto precisa ser escolhido de novo
+    watch(() => item.value.armazemId, () => item.value.produtoId = null);
 
     onMounted(async () => {
         try {
             await Promise.all([storeArmazem.listarArmazens(), storeCliente.listarClientes(),
-                storeVeiculo.listarVeiculos(), storeMotorista.listarMotoristas()]);
+                storeVeiculo.listarVeiculos(), storeMotorista.listarMotoristas(), storeEstoque.listarSaldos()]);
         } catch (error) {
             mensagemStore.mostrarErro(error);
         }
@@ -61,6 +74,7 @@
         try {
             const resposta = await storeViagem.iniciarViagem({
                 ...item.value,
+                quantidade: Number(item.value.quantidade),
                 distanciaKm: Number(item.value.distanciaKm),
                 valorPorKm: Number(item.value.valorPorKm)
             });
@@ -89,6 +103,15 @@
                     label="Motorista *" :rules="[obrigatorio]" :disabled="!item.veiculoId" density="compact"
                     no-data-text="Nenhum motorista com CNH válida nesta transportadora"></v-select>
                 <v-row density="compact">
+                    <v-col cols="12" sm="8">
+                        <v-select v-model="item.produtoId" :items="produtosDoArmazem" item-title="texto" item-value="id"
+                            label="Produto *" :rules="[obrigatorio]" :disabled="!item.armazemId" density="compact"
+                            no-data-text="Nenhum produto com saldo neste armazém"></v-select>
+                    </v-col>
+                    <v-col cols="12" sm="4">
+                        <v-text-field v-model="item.quantidade" type="number" min="1" step="1" label="Quantidade *"
+                            :rules="[maiorQueZero]" density="compact"></v-text-field>
+                    </v-col>
                     <v-col cols="12" sm="6">
                         <v-text-field v-model="item.distanciaKm" type="number" min="0" step="0.01" label="Distância (km) *"
                             :rules="[maiorQueZero]" density="compact"></v-text-field>

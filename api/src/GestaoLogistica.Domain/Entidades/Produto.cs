@@ -14,6 +14,9 @@ public class Produto : EntidadeBase
     // Saldos deste produto em cada armazém
     public List<Estoque> Estoques { get; set; } = new();
 
+    // Produto sem peso cadastrado conta como zero
+    public decimal CalcularPeso(int quantidade) => (Peso ?? 0) * quantidade;
+
     public int CalcularQuantidadeTotal() => Estoques.Sum(e => e.Quantidade);
 
     public bool EstaVencido()

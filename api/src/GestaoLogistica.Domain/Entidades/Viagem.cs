@@ -12,6 +12,9 @@ public class Viagem : EntidadeBase
     public Veiculo? Veiculo { get; set; }
     public int MotoristaId { get; set; }
     public Motorista? Motorista { get; set; }
+    public int? ProdutoId { get; set; } // nulo só nas viagens antigas, feitas antes deste campo
+    public Produto? Produto { get; set; }
+    public int Quantidade { get; set; }
     public decimal DistanciaKm { get; set; }
     public decimal ValorPorKm { get; set; } // valor do frete por km
     public string Status { get; set; } = StatusViagem.Iniciada;

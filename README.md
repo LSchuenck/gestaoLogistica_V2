@@ -24,7 +24,7 @@ Módulos:
 | Armazéns | CRUD com endereço | Não pode ser excluído se tiver produtos com saldo ou movimentações |
 | Produtos | CRUD | Indica produto vencido e estoque crítico (menos de 10 unidades no total); não exclui produto com saldo ou movimentações |
 | Estoque | Entrada/saída por armazém, saldos e histórico | Quantidade maior que zero; saída não pode ser maior que o saldo do armazém; saldo e histórico são gravados juntos, com o produto travado no banco (duas saídas ao mesmo tempo não furam o saldo); registra o usuário que fez a movimentação |
-| Viagens | Iniciar, avançar, concluir e cancelar, de um armazém até um cliente | Veículo disponível; motorista com CNH válida, da mesma transportadora e sem outra viagem; só conclui depois de avançar; faturamento = distância (km) x valor do frete por km, e viagem cancelada não fatura; o veículo fica EM_VIAGEM e volta a DISPONIVEL no fim; não exclui veículo, motorista, cliente ou armazém com viagens |
+| Viagens | Iniciar, avançar, concluir e cancelar o transporte de um produto, de um armazém até um cliente | O produto sai do estoque da origem ao iniciar e volta se a viagem for cancelada; não passa do saldo nem da capacidade do veículo; veículo disponível; motorista com CNH válida, da mesma transportadora e sem outra viagem; só conclui depois de avançar; faturamento = distância (km) x valor do frete por km, e viagem cancelada não fatura; o veículo fica EM_VIAGEM e volta a DISPONIVEL no fim; não exclui veículo, motorista, cliente ou armazém com viagens |
 
 Permissões por perfil (as mesmas do sistema original):
 
@@ -74,7 +74,7 @@ Decisões principais:
 - **Domain não depende de ninguém.** As interfaces dos repositórios (`IRepositorioProduto` etc.) ficam no Domain e são implementadas na Infrastructure. Regras simples ficam nas próprias entidades (ex.: `Estoque.TemSaldoSuficiente`, `Motorista.CnhEstaVencida`, `Transportadora.AlternarStatus`).
 - **Os controllers não têm lógica.** Eles só recebem a requisição, chamam o serviço e devolvem o `ResultWrapper`. As regras ficam nos serviços da Application (`ServicoTransportadora`, `ServicoEstoque`...).
 - **Application não conhece BCrypt, JWT nem EF Core.** Ela usa as interfaces `ICriptografiaSenha` e `IGeradorToken`, implementadas na Infrastructure.
-- **Movimentação de estoque com trava:** o `ServicoEstoque` confere o saldo e grava dentro de uma transação com `SELECT ... FOR UPDATE` no produto. Uma movimentação do mesmo produto espera a outra terminar.
+- **Movimentação de estoque com trava:** o `ServicoEstoque` confere o saldo e grava dentro de uma transação com `SELECT ... FOR UPDATE` no produto. Uma movimentação do mesmo produto espera a outra terminar. As viagens usam a mesma ideia (`RepositorioViagem`), para o estoque não ser devolvido duas vezes.
 - **Repositório base genérico** (`RepositorioBase<T>`) com o CRUD comum, para não repetir código. Cada repositório específico só acrescenta suas consultas.
 - **Injeção de dependência:** cada camada registra seus serviços (`AdicionarCamadaAplicacao` e `AdicionarCamadaInfraestrutura`).
 - **Endereço** é um *owned type* do EF Core: as colunas ficam na tabela da transportadora, do cliente ou do armazém. No sistema PHP era uma tabela separada; assim o código ficou mais simples.

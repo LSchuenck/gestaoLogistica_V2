@@ -28,7 +28,7 @@ const statusViagem = {
 
 const cabecalhos = [
     { title: 'Nº', key: 'id' },
-    { title: 'Origem / Destino', key: 'origem', value: v => `${v.origem} → ${v.destino}` },
+    { title: 'Origem / Destino / Carga', key: 'origem', value: v => `${v.origem} → ${v.destino} ${v.produto}` },
     { title: 'Veículo / Motorista', key: 'veiculo', value: v => `${v.veiculo} - ${v.motorista}` },
     { title: 'Saída / Chegada', key: 'dataSaida' },
     { title: 'Faturamento', key: 'faturamento' },
@@ -83,6 +83,10 @@ const confirmarCancelamento = (viagem) => {
 
             <v-data-table :headers="cabecalhos" :items="viagens" :search="busca" :loading="carregando"
                 :sort-by="[{ key: 'id', order: 'desc' }]" item-value="id" hover>
+                <template v-slot:item.origem="{ item }">
+                    <div>{{ item.origem }} → {{ item.destino }}</div>
+                    <div v-if="item.produto" class="text-caption">{{ item.quantidade }} un. de {{ item.produto }}</div>
+                </template>
                 <template v-slot:item.dataSaida="{ item }">
                     <div class="text-no-wrap">{{ formatarDataHora(item.dataSaida) }}</div>
                     <div class="text-no-wrap">{{ formatarDataHora(item.dataChegada) }}</div>
