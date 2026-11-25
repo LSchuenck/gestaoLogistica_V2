@@ -15,7 +15,7 @@ Módulos:
 
 | Módulo | O que faz | Principais regras de negócio |
 |---|---|---|
-| Usuários | Cadastro, edição, ativação e exclusão (somente ADMIN) | E-mail único; perfis ADMIN, GERENTE e OPERADOR; o administrador master (id 1) não pode ser excluído nem desativado; ninguém exclui ou desativa a própria conta; usuário inativo não faz login; senha com no mínimo 6 caracteres guardada com hash BCrypt |
+| Usuários | Cadastro, edição, ativação e exclusão (somente ADMIN) | E-mail único; perfis ADMIN, GERENTE e OPERADOR; o administrador master (id 1) não pode ser excluído nem desativado; ninguém exclui ou desativa a própria conta; não exclui usuário com movimentações de estoque; usuário inativo não faz login; senha com no mínimo 6 caracteres guardada com hash BCrypt |
 | Transportadoras | CRUD + ativar/desativar | CNPJ único; não pode ser excluída se tiver motoristas ou veículos |
 | Motoristas | CRUD | Só pode ser ligado a uma transportadora **ativa**; CPF e CNH únicos; indica CNH vencida |
 | Veículos | CRUD + troca de status | Placa única; transportadora ativa; status só DISPONIVEL, EM_VIAGEM ou MANUTENCAO; não exclui veículo em viagem |
@@ -31,6 +31,8 @@ Módulos:
 **Front-end:** Vue 3, Vite, Vue Router, Pinia, Vuetify, Axios.
 
 **Banco de dados:** MySQL 8 (também funciona com o MariaDB do XAMPP).
+
+**Implantação:** Docker e Docker Compose.
 
 ## Arquitetura
 
@@ -80,6 +82,47 @@ front/src/
 ```
 
 ## Como executar
+
+Há duas formas: com Docker (mais simples) ou sem Docker (para desenvolver). As duas usam as portas 5080 e 5173, então rode **uma de cada vez**.
+
+## Executar com Docker
+
+Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/) aberto.
+
+1. Na pasta do projeto, crie o arquivo de senhas e preencha (ele não vai para o Git):
+
+```bash
+copy .env.exemplo .env
+```
+
+2. Suba o sistema:
+
+```bash
+docker compose up -d --build
+```
+
+3. Acesse `http://localhost:5173`.
+
+| Serviço | Imagem | Endereço |
+|---|---|---|
+| `banco` | `mysql:8.4` | só dentro da rede do Docker |
+| `api` | `api/Dockerfile` (.NET 10) | `http://localhost:5080` |
+| `front` | `front/Dockerfile` (Vue + Nginx) | `http://localhost:5173` |
+
+- A API só inicia depois que o MySQL está pronto (`healthcheck` + `depends_on`).
+- Os dados ficam no volume `dados_mysql` e continuam lá quando os containers são recriados.
+- O banco do Docker é separado do MySQL instalado na máquina.
+
+| Comando | O que faz |
+|---|---|
+| `docker compose ps` | Mostra os containers |
+| `docker compose logs -f api` | Mostra o log da API (inclusive o `[CACHE]`) |
+| `docker compose down` | Para tudo e mantém os dados |
+| `docker compose down -v` | Para tudo e **apaga os dados** |
+
+As senhas do banco são gravadas na primeira execução. Para trocá-las depois, é preciso recriar o banco com `docker compose down -v`.
+
+## Executar sem Docker
 
 ### Pré-requisitos
 

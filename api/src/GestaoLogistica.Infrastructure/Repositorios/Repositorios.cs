@@ -20,6 +20,11 @@ public class RepositorioUsuario : RepositorioBase<Usuario>, IRepositorioUsuario
     {
         return await _contexto.Usuarios.AnyAsync(u => u.Email == email && u.Id != idIgnorado);
     }
+
+    public async Task<bool> PossuiMovimentacoes(int idUsuario)
+    {
+        return await _contexto.MovimentacoesEstoque.AnyAsync(m => m.UsuarioId == idUsuario);
+    }
 }
 
 public class RepositorioTransportadora : RepositorioBase<Transportadora>, IRepositorioTransportadora

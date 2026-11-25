@@ -6,6 +6,7 @@ obj/
 
 # Configuração local com segredos (senha do banco e chave do JWT)
 api/src/GestaoLogistica.API/appsettings.Development.json
+/.env
 
 # Front-end
 node_modules/

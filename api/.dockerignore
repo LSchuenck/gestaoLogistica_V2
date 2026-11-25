@@ -1,0 +1,5 @@
+# Não entram na imagem: arquivos de build e a configuração local com senhas
+**/bin
+**/obj
+**/.vs
+**/appsettings.Development*.json

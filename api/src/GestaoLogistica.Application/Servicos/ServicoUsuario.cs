@@ -113,6 +113,9 @@ public class ServicoUsuario : IServicoUsuario
         if (usuario.Id == idUsuarioLogado)
             return ResultWrapper<object>.Falha("Você não pode excluir sua própria conta.");
 
+        if (await _repositorio.PossuiMovimentacoes(id))
+            return ResultWrapper<object>.Falha("Não é possível excluir: o usuário possui movimentações de estoque. Desative-o se necessário.");
+
         await _repositorio.Remover(usuario);
         return ResultWrapper<object>.Ok(null, "Usuário excluído com sucesso.");
     }
