@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using GestaoLogistica.Domain.Entidades;
 
 namespace GestaoLogistica.Application.DTOs;
@@ -12,6 +13,11 @@ public class UsuarioDto
     public string Perfil { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime DataCadastro { get; set; }
+    public bool TrocarSenha { get; set; }
+
+    // Só é preenchida no cadastro, quando o e-mail com a senha não pôde ser enviado
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? SenhaTemporaria { get; set; }
 
     public static UsuarioDto Converter(Usuario usuario)
     {
@@ -22,7 +28,8 @@ public class UsuarioDto
             Email = usuario.Email,
             Perfil = usuario.Perfil,
             Status = usuario.Status,
-            DataCadastro = usuario.DataCadastro
+            DataCadastro = usuario.DataCadastro,
+            TrocarSenha = usuario.TrocarSenha
         };
     }
 }
@@ -42,7 +49,7 @@ public class SalvarUsuarioDto
     [Required(ErrorMessage = "Informe o perfil.")]
     public string Perfil { get; set; } = string.Empty;
 
-    // Obrigatória no cadastro; na alteração, se vier vazia a senha atual é mantida
+    // Usada só na alteração (vazia = mantém a atual). No cadastro o sistema gera uma senha temporária.
     [MaxLength(72, ErrorMessage = "O campo senha aceita no máximo 72 caracteres.")]
     public string? Senha { get; set; }
 }

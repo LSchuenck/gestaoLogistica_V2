@@ -16,7 +16,7 @@ Módulos:
 
 | Módulo | O que faz | Principais regras de negócio |
 |---|---|---|
-| Usuários | Cadastro, edição, ativação e exclusão (somente ADMIN) | E-mail único; perfis ADMIN, GERENTE e OPERADOR; o administrador master (id 1) não pode ser excluído, desativado nem perder o perfil ADMIN; ninguém exclui ou desativa a própria conta; não exclui usuário com movimentações de estoque; usuário inativo não faz login; senha com no mínimo 6 caracteres guardada com hash BCrypt |
+| Usuários | Cadastro, edição, ativação e exclusão (somente ADMIN) | E-mail único; perfis ADMIN, GERENTE e OPERADOR; o administrador master (id 1) não pode ser excluído, desativado nem perder o perfil ADMIN; ninguém exclui ou desativa a própria conta; não exclui usuário com movimentações de estoque; usuário inativo não faz login; o cadastro gera uma senha temporária, enviada por e-mail, que precisa ser trocada no primeiro acesso; senha com no mínimo 6 caracteres guardada com hash BCrypt |
 | Transportadoras | CRUD + ativar/desativar | CNPJ único; não pode ser excluída se tiver motoristas ou veículos |
 | Motoristas | CRUD | Só pode ser ligado a uma transportadora **ativa**; CPF e CNH únicos; indica CNH vencida |
 | Veículos | CRUD + troca de status | Placa única; transportadora ativa; status só DISPONIVEL, EM_VIAGEM ou MANUTENCAO; não exclui veículo em viagem |
@@ -24,6 +24,14 @@ Módulos:
 | Armazéns | CRUD com endereço | Não pode ser excluído se tiver produtos com saldo ou movimentações |
 | Produtos | CRUD | Indica produto vencido e estoque crítico (menos de 10 unidades no total); não exclui produto com saldo ou movimentações |
 | Estoque | Entrada/saída por armazém, saldos e histórico | Quantidade maior que zero; saída não pode ser maior que o saldo do armazém; saldo e histórico são gravados juntos, com o produto travado no banco (duas saídas ao mesmo tempo não furam o saldo); registra o usuário que fez a movimentação |
+
+Permissões por perfil (as mesmas do sistema original):
+
+| Perfil | Acesso |
+|---|---|
+| ADMIN | Tudo |
+| GERENTE | Tudo, menos Usuários |
+| OPERADOR | Somente Estoque |
 
 ## Tecnologias
 
@@ -149,13 +157,16 @@ copy appsettings.Development.exemplo.json appsettings.Development.json
   "AdministradorInicial": {
     "Senha": "SENHA_DO_PRIMEIRO_ADMINISTRADOR"
   },
+  "Email": {
+    "UrlPowerAutomate": "ENDERECO_DO_FLUXO_DO_POWER_AUTOMATE"
+  },
   "Jwt": {
     "Chave": "UMA_CHAVE_SECRETA_COM_PELO_MENOS_32_CARACTERES"
   }
 }
 ```
 
-> O `appsettings.Development.json` está no `.gitignore`: senha do banco, chave do JWT e senha inicial do administrador **não vão para o repositório**. Também é possível passar tudo por variáveis de ambiente (`ConnectionStrings__BancoGestaoLogistica`, `Jwt__Chave` e `AdministradorInicial__Senha`).
+> O `appsettings.Development.json` está no `.gitignore`: senha do banco, chave do JWT, senha inicial do administrador e endereço do Power Automate **não vão para o repositório**. Também é possível passar tudo por variáveis de ambiente (`ConnectionStrings__BancoGestaoLogistica`, `Jwt__Chave`, `AdministradorInicial__Senha` e `Email__UrlPowerAutomate`).
 
 Não é preciso criar o banco: na primeira execução a API cria o banco `gestao_logistica_api`, as tabelas e os dados de exemplo (transportadoras, motoristas, veículos, clientes, armazéns, produtos e estoque).
 
@@ -183,6 +194,8 @@ Acesse `http://localhost:5173`. O endereço da API está no arquivo `front/.env`
 | E-mail | Senha | Perfil |
 |---|---|---|
 | admin@gestao.com | a que você definiu (`SENHA_ADMIN` no `.env` do Docker, ou `AdministradorInicial:Senha` sem Docker) | ADMIN |
+
+Se o banco já existia antes do campo `TrocarSenha`, recrie-o ou rode: `ALTER TABLE Usuarios ADD COLUMN TrocarSenha tinyint(1) NOT NULL DEFAULT 0;`
 
 Essa senha só é usada quando o banco é criado. Depois, altere pela tela de Usuários.
 
@@ -220,6 +233,15 @@ O código HTTP acompanha o resultado (200, 201, 400, 401, 403, 404, 500). Erros 
 6. A API também confere, a cada requisição, se o usuário ainda existe, está ativo e tem o mesmo perfil do token (`TokenAindaEhValido`). Quem foi desativado perde o acesso na hora → **401**.
 7. Se o token expirar, o front recebe 401, limpa o login e volta para a tela de login com o aviso “Sua sessão expirou”.
 
+### Primeiro acesso
+
+1. O ADMIN cadastra o usuário sem informar senha. A API gera uma senha temporária de 10 caracteres.
+2. A senha é enviada por e-mail, por um fluxo do **Microsoft Power Automate**. Se o envio falhar, a senha aparece na tela para o ADMIN repassar.
+3. No primeiro login, o token traz a informação `TrocarSenha`. O `TrocaSenhaMiddleware` bloqueia toda a API (403), menos `PUT /api/autenticacao/senha`.
+4. Depois da troca, a API devolve um novo token e o acesso é liberado.
+
+O endereço do fluxo tem uma assinatura secreta, por isso fica na configuração (`URL_POWER_AUTOMATE` no Docker, ou `Email:UrlPowerAutomate` sem Docker). Ele é opcional: vazio, a senha temporária aparece na tela.
+
 ## Estratégia de cache
 
 **Onde:** listagem de transportadoras (`GET /api/transportadoras`), em `ServicoTransportadora`.
@@ -238,11 +260,12 @@ Na tela de Transportadoras, abaixo do título, aparece a origem dos dados (cache
 
 ## Principais endpoints
 
-Todos começam com `http://localhost:5080/api`. Todos exigem token, exceto o login.
+Todos começam com `http://localhost:5080/api`. Todos exigem token, exceto o login. Os cadastros exigem perfil ADMIN ou GERENTE, mas a lista de produtos e a de armazéns são liberadas para o OPERADOR, porque a tela de Estoque usa. O estoque é liberado para todos.
 
 | Método | Endpoint | Descrição |
 |---|---|---|
 | POST | `/autenticacao/login` | Login (público) — devolve o token JWT |
+| PUT | `/autenticacao/senha` | Trocar a senha temporária no primeiro acesso |
 | GET / POST | `/usuarios` | Listar / cadastrar usuário (ADMIN) |
 | GET / PUT / DELETE | `/usuarios/{id}` | Buscar / alterar / excluir usuário (ADMIN) |
 | PATCH | `/usuarios/{id}/status` | Ativar/desativar usuário (ADMIN) |

@@ -1,6 +1,7 @@
 using GestaoLogistica.Application.Interfaces;
 using GestaoLogistica.Domain.Interfaces;
 using GestaoLogistica.Infrastructure.Dados;
+using GestaoLogistica.Infrastructure.Email;
 using GestaoLogistica.Infrastructure.Repositorios;
 using GestaoLogistica.Infrastructure.Seguranca;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,7 @@ public static class InjecaoDependencia
 
         servicos.AddScoped<ICriptografiaSenha, CriptografiaSenhaBCrypt>();
         servicos.AddScoped<IGeradorToken, GeradorTokenJwt>();
+        servicos.AddScoped<IServicoEmail, ServicoEmailPowerAutomate>();
 
         return servicos;
     }

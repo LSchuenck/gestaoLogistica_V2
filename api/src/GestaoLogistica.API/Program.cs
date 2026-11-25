@@ -134,6 +134,7 @@ app.UseStatusCodePages(async contexto =>
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<TrocaSenhaMiddleware>();
 app.MapControllers();
 
 app.Run();

@@ -14,6 +14,9 @@ public class Usuario : EntidadeBase
     public string Status { get; set; } = StatusCadastro.Ativo;
     public DateTime DataCadastro { get; set; } = DateTime.Now;
 
+    // true enquanto o usuário não trocar a senha temporária no primeiro acesso
+    public bool TrocarSenha { get; set; }
+
     public bool EstaAtivo() => Status == StatusCadastro.Ativo;
 
     public bool EhAdministradorMaster() => Id == IdAdministradorMaster;

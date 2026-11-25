@@ -30,7 +30,8 @@ public class GeradorTokenJwt : IGeradorToken
             new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
             new Claim(ClaimTypes.Name, usuario.Nome),
             new Claim(ClaimTypes.Email, usuario.Email),
-            new Claim(ClaimTypes.Role, usuario.Perfil)
+            new Claim(ClaimTypes.Role, usuario.Perfil),
+            new Claim("TrocarSenha", usuario.TrocarSenha.ToString())
         };
 
         var token = new JwtSecurityToken(

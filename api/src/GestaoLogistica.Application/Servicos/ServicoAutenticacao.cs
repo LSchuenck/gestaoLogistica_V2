@@ -1,6 +1,7 @@
 using GestaoLogistica.Application.Comum;
 using GestaoLogistica.Application.DTOs;
 using GestaoLogistica.Application.Interfaces;
+using GestaoLogistica.Domain.Entidades;
 using GestaoLogistica.Domain.Interfaces;
 
 namespace GestaoLogistica.Application.Servicos;
@@ -31,18 +32,38 @@ public class ServicoAutenticacao : IServicoAutenticacao
         if (!usuario.EstaAtivo())
             return ResultWrapper<LoginRespostaDto>.Falha("Usuário inativo. Contate o administrador.", null, 403);
 
-        var resposta = new LoginRespostaDto
-        {
-            Token = _geradorToken.GerarToken(usuario),
-            Usuario = UsuarioDto.Converter(usuario)
-        };
+        return ResultWrapper<LoginRespostaDto>.Ok(MontarResposta(usuario), "Login realizado com sucesso.");
+    }
 
-        return ResultWrapper<LoginRespostaDto>.Ok(resposta, "Login realizado com sucesso.");
+    public async Task<ResultWrapper<LoginRespostaDto>> TrocarSenha(int idUsuario, TrocarSenhaDto dados)
+    {
+        var usuario = await _repositorioUsuario.BuscarPorId(idUsuario);
+        if (usuario == null)
+            return ResultWrapper<LoginRespostaDto>.NaoEncontrado("Usuário não encontrado.");
+
+        if (!usuario.TrocarSenha)
+            return ResultWrapper<LoginRespostaDto>.Falha("A senha já foi trocada no primeiro acesso.");
+
+        usuario.SenhaHash = _criptografiaSenha.GerarHash(dados.NovaSenha);
+        usuario.TrocarSenha = false;
+        await _repositorioUsuario.Atualizar(usuario);
+
+        // O token antigo diz que a senha precisa ser trocada, então é preciso gerar outro
+        return ResultWrapper<LoginRespostaDto>.Ok(MontarResposta(usuario), "Senha alterada com sucesso.");
     }
 
     public async Task<bool> TokenAindaEhValido(int idUsuario, string perfilDoToken)
     {
         var usuario = await _repositorioUsuario.BuscarPorId(idUsuario);
         return usuario != null && usuario.EstaAtivo() && usuario.Perfil == perfilDoToken;
+    }
+
+    private LoginRespostaDto MontarResposta(Usuario usuario)
+    {
+        return new LoginRespostaDto
+        {
+            Token = _geradorToken.GerarToken(usuario),
+            Usuario = UsuarioDto.Converter(usuario)
+        };
     }
 }

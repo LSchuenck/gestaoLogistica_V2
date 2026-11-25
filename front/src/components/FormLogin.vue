@@ -23,7 +23,7 @@
         try {
             const resposta = await authStore.entrar(item.value.email, item.value.senha);
             mensagemStore.mostrarSucesso(resposta.mensagem);
-            router.push('/transportadoras');
+            router.push(authStore.paginaInicial);
         } catch (error) {
             mensagemStore.mostrarErro(error);
         } finally {

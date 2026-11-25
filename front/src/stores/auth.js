@@ -9,14 +9,34 @@ export const useAuthStore = defineStore("auth", () => {
 
     const estaLogado = computed(() => !!token.value);
     const ehAdministrador = computed(() => usuario.value?.perfil === "ADMIN");
+    const ehOperador = computed(() => usuario.value?.perfil === "OPERADOR");
+
+    // Primeiro acesso: ainda está com a senha temporária
+    const precisaTrocarSenha = computed(() => !!usuario.value?.trocarSenha);
+
+    // O operador só usa o estoque, então começa por ele
+    const paginaInicial = computed(() => {
+        if (precisaTrocarSenha.value) return "/trocar-senha";
+        return ehOperador.value ? "/estoque" : "/transportadoras";
+    });
 
     const entrar = async (email, senha) => {
         const response = await api.post("/autenticacao/login", { email, senha });
-        token.value = response.data.dados.token;
-        usuario.value = response.data.dados.usuario;
+        guardarLogin(response.data.dados);
+        return response.data;
+    }
+
+    const trocarSenha = async (novaSenha, confirmacaoSenha) => {
+        const response = await api.put("/autenticacao/senha", { novaSenha, confirmacaoSenha });
+        guardarLogin(response.data.dados);
+        return response.data;
+    }
+
+    const guardarLogin = (dados) => {
+        token.value = dados.token;
+        usuario.value = dados.usuario;
         localStorage.setItem("token", token.value);
         localStorage.setItem("usuario", JSON.stringify(usuario.value));
-        return response.data;
     }
 
     const sair = () => {
@@ -26,5 +46,6 @@ export const useAuthStore = defineStore("auth", () => {
         localStorage.removeItem("usuario");
     }
 
-    return { token, usuario, estaLogado, ehAdministrador, entrar, sair }
+    return { token, usuario, estaLogado, ehAdministrador, ehOperador, precisaTrocarSenha, paginaInicial,
+        entrar, trocarSenha, sair }
 });

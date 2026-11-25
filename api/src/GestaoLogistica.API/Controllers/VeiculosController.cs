@@ -1,10 +1,13 @@
 using GestaoLogistica.Application.DTOs;
 using GestaoLogistica.Application.Interfaces;
+using GestaoLogistica.Domain.Constantes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GestaoLogistica.API.Controllers;
 
 [Route("api/veiculos")]
+[Authorize(Roles = PerfisUsuario.AdministradorOuGerente)]
 public class VeiculosController : ApiControllerBase
 {
     private readonly IServicoVeiculo _servico;

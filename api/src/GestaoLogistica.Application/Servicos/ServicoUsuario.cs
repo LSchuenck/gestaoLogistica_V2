@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using GestaoLogistica.Application.Comum;
 using GestaoLogistica.Application.DTOs;
 using GestaoLogistica.Application.Interfaces;
@@ -9,15 +10,19 @@ namespace GestaoLogistica.Application.Servicos;
 
 public class ServicoUsuario : IServicoUsuario
 {
+    private const int TamanhoSenhaTemporaria = 10;
+    private const string CaracteresSenha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private const int TamanhoMinimoSenha = 6;
 
     private readonly IRepositorioUsuario _repositorio;
     private readonly ICriptografiaSenha _criptografiaSenha;
+    private readonly IServicoEmail _servicoEmail;
 
-    public ServicoUsuario(IRepositorioUsuario repositorio, ICriptografiaSenha criptografiaSenha)
+    public ServicoUsuario(IRepositorioUsuario repositorio, ICriptografiaSenha criptografiaSenha, IServicoEmail servicoEmail)
     {
         _repositorio = repositorio;
         _criptografiaSenha = criptografiaSenha;
+        _servicoEmail = servicoEmail;
     }
 
     public async Task<ResultWrapper<List<UsuarioDto>>> Listar()
@@ -38,23 +43,29 @@ public class ServicoUsuario : IServicoUsuario
 
     public async Task<ResultWrapper<UsuarioDto>> Cadastrar(SalvarUsuarioDto dados)
     {
-        if (string.IsNullOrWhiteSpace(dados.Senha) || dados.Senha.Length < TamanhoMinimoSenha)
-            return ResultWrapper<UsuarioDto>.Falha($"A senha deve ter no mínimo {TamanhoMinimoSenha} caracteres.");
-
         var erro = await ValidarDados(dados, 0);
         if (erro != null)
             return ResultWrapper<UsuarioDto>.Falha(erro);
 
+        var senhaTemporaria = GerarSenhaTemporaria();
         var usuario = new Usuario
         {
             Nome = dados.Nome.Trim(),
             Email = dados.Email.Trim(),
             Perfil = dados.Perfil,
-            SenhaHash = _criptografiaSenha.GerarHash(dados.Senha)
+            SenhaHash = _criptografiaSenha.GerarHash(senhaTemporaria),
+            TrocarSenha = true
         };
 
         await _repositorio.Adicionar(usuario);
-        return ResultWrapper<UsuarioDto>.Criado(UsuarioDto.Converter(usuario), "Usuário cadastrado com sucesso.");
+        var resposta = UsuarioDto.Converter(usuario);
+
+        if (await _servicoEmail.EnviarBoasVindas(usuario.Email, usuario.Nome, senhaTemporaria))
+            return ResultWrapper<UsuarioDto>.Criado(resposta, "Usuário cadastrado. Senha enviada por e-mail.");
+
+        // Se o e-mail falhar, o administrador vê a senha para repassar ao usuário
+        resposta.SenhaTemporaria = senhaTemporaria;
+        return ResultWrapper<UsuarioDto>.Criado(resposta, $"Usuário cadastrado, mas o e-mail não foi enviado. Senha temporária: {senhaTemporaria}");
     }
 
     public async Task<ResultWrapper<UsuarioDto>> Atualizar(int id, SalvarUsuarioDto dados)
@@ -133,5 +144,10 @@ public class ServicoUsuario : IServicoUsuario
             return "E-mail já cadastrado.";
 
         return null;
+    }
+
+    private static string GerarSenhaTemporaria()
+    {
+        return RandomNumberGenerator.GetString(CaracteresSenha, TamanhoSenhaTemporaria);
     }
 }

@@ -19,3 +19,15 @@ public class LoginRespostaDto
     public string Token { get; set; } = string.Empty;
     public UsuarioDto Usuario { get; set; } = new();
 }
+
+// Nova senha escolhida no primeiro acesso
+public class TrocarSenhaDto
+{
+    [Required(ErrorMessage = "Informe a nova senha.")]
+    [MinLength(6, ErrorMessage = "A senha deve ter no mínimo 6 caracteres.")]
+    [MaxLength(72, ErrorMessage = "O campo senha aceita no máximo 72 caracteres.")]
+    public string NovaSenha { get; set; } = string.Empty;
+
+    [Compare(nameof(NovaSenha), ErrorMessage = "As senhas não conferem.")]
+    public string ConfirmacaoSenha { get; set; } = string.Empty;
+}

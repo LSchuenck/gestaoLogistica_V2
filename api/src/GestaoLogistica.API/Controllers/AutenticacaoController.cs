@@ -19,4 +19,8 @@ public class AutenticacaoController : ApiControllerBase
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Entrar(LoginDto dados) => Responder(await _servico.Entrar(dados));
+
+    // PUT api/autenticacao/senha  (primeiro acesso: troca a senha temporária)
+    [HttpPut("senha")]
+    public async Task<IActionResult> TrocarSenha(TrocarSenhaDto dados) => Responder(await _servico.TrocarSenha(IdUsuarioLogado(), dados));
 }

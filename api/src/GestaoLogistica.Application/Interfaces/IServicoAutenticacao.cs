@@ -9,4 +9,7 @@ public interface IServicoAutenticacao
 
     // Confere se o dono do token ainda existe, está ativo e tem o mesmo perfil
     Task<bool> TokenAindaEhValido(int idUsuario, string perfilDoToken);
+
+    // Troca a senha temporária no primeiro acesso e devolve um novo token
+    Task<ResultWrapper<LoginRespostaDto>> TrocarSenha(int idUsuario, TrocarSenhaDto dados);
 }
