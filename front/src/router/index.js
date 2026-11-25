@@ -51,6 +51,11 @@ const router = createRouter({
       name: 'usuarios',
       component: () => import("@/views/Usuarios.vue"),
       meta: { somenteAdministrador: true }
+    },
+    // Endereço que não existe volta para o início
+    {
+      path: '/:caminho(.*)*',
+      redirect: '/'
     }
   ],
 })

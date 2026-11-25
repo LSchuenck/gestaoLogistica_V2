@@ -4,8 +4,9 @@ Trabalho integrado das disciplinas **Desenvolvimento Web III** (front-end em Vue
 
 ## Integrantes
 
-- Nome do integrante 1
-- Nome do integrante 2
+- Lucas Faria Schuenck de Souza
+- Alexandre João Souza de Araújo
+- Cauan Etienne Andrade e Silva
 
 ## Descrição do sistema
 

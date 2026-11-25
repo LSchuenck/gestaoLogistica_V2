@@ -11,7 +11,8 @@ const authStore = useAuthStore();
 const mensagemStore = useMensagemStore();
 const { visivel, texto, cor } = storeToRefs(mensagemStore);
 
-const drawer = ref(true);
+// null: o Vuetify deixa o menu aberto no computador e fechado no celular
+const drawer = ref(null);
 
 // O menu só aparece fora da tela de login
 const mostrarMenu = computed(() => route.path !== '/');
@@ -34,6 +35,7 @@ const itensMenu = computed(() => {
 
 const sair = () => {
   authStore.sair();
+  mensagemStore.mostrarSucesso('Você saiu do sistema.');
   router.push('/');
 }
 </script>
