@@ -17,6 +17,7 @@ public class ContextoBanco : DbContext
     public DbSet<Produto> Produtos => Set<Produto>();
     public DbSet<Estoque> Estoques => Set<Estoque>();
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque => Set<MovimentacaoEstoque>();
+    public DbSet<Viagem> Viagens => Set<Viagem>();
 
     protected override void OnModelCreating(ModelBuilder modelo)
     {
@@ -71,5 +72,19 @@ public class ContextoBanco : DbContext
         modelo.Entity<MovimentacaoEstoque>()
             .HasOne(m => m.Usuario).WithMany()
             .HasForeignKey(m => m.UsuarioId).OnDelete(DeleteBehavior.Restrict);
+
+        // Viagem: impede apagar armazém, cliente, veículo ou motorista que tenha viagem
+        modelo.Entity<Viagem>()
+            .HasOne(v => v.Armazem).WithMany()
+            .HasForeignKey(v => v.ArmazemId).OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<Viagem>()
+            .HasOne(v => v.Cliente).WithMany()
+            .HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<Viagem>()
+            .HasOne(v => v.Veiculo).WithMany()
+            .HasForeignKey(v => v.VeiculoId).OnDelete(DeleteBehavior.Restrict);
+        modelo.Entity<Viagem>()
+            .HasOne(v => v.Motorista).WithMany()
+            .HasForeignKey(v => v.MotoristaId).OnDelete(DeleteBehavior.Restrict);
     }
 }

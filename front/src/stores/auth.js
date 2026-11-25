@@ -14,7 +14,7 @@ export const useAuthStore = defineStore("auth", () => {
     // Primeiro acesso: ainda está com a senha temporária
     const precisaTrocarSenha = computed(() => !!usuario.value?.trocarSenha);
 
-    // O operador só usa o estoque, então começa por ele
+    // O operador não acessa os cadastros, então começa pelo estoque
     const paginaInicial = computed(() => {
         if (precisaTrocarSenha.value) return "/trocar-senha";
         return ehOperador.value ? "/estoque" : "/transportadoras";

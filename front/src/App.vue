@@ -27,12 +27,13 @@ const itensMenu = computed(() => {
     { titulo: 'Produtos', rota: '/produtos', icone: 'mdi-package-variant-closed' },
   ];
   const estoque = { titulo: 'Estoque', rota: '/estoque', icone: 'mdi-swap-vertical' };
+  const viagens = { titulo: 'Viagens', rota: '/viagens', icone: 'mdi-truck-fast' };
   const usuarios = { titulo: 'Usuários', rota: '/usuarios', icone: 'mdi-account-cog' };
 
-  // Operador: só estoque. Gerente: cadastros e estoque. Administrador: tudo.
-  if (authStore.ehOperador) return [estoque];
-  if (authStore.ehAdministrador) return [...cadastros, estoque, usuarios];
-  return [...cadastros, estoque];
+  // Operador: estoque e viagens. Gerente: também os cadastros. Administrador: tudo.
+  if (authStore.ehOperador) return [estoque, viagens];
+  if (authStore.ehAdministrador) return [...cadastros, estoque, viagens, usuarios];
+  return [...cadastros, estoque, viagens];
 });
 
 const sair = () => {

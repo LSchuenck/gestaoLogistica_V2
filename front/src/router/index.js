@@ -54,6 +54,11 @@ const router = createRouter({
       component: () => import("@/views/Estoque.vue")
     },
     {
+      path: '/viagens',
+      name: 'viagens',
+      component: () => import("@/views/Viagens.vue")
+    },
+    {
       path: '/trocar-senha',
       name: 'trocar-senha',
       component: () => import("@/views/TrocarSenha.vue")

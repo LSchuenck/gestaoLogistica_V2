@@ -10,11 +10,13 @@ public class ServicoMotorista : IServicoMotorista
 {
     private readonly IRepositorioMotorista _repositorio;
     private readonly IRepositorioTransportadora _repositorioTransportadora;
+    private readonly IRepositorioViagem _repositorioViagem;
 
-    public ServicoMotorista(IRepositorioMotorista repositorio, IRepositorioTransportadora repositorioTransportadora)
+    public ServicoMotorista(IRepositorioMotorista repositorio, IRepositorioTransportadora repositorioTransportadora, IRepositorioViagem repositorioViagem)
     {
         _repositorio = repositorio;
         _repositorioTransportadora = repositorioTransportadora;
+        _repositorioViagem = repositorioViagem;
     }
 
     public async Task<ResultWrapper<List<MotoristaDto>>> Listar()
@@ -70,6 +72,9 @@ public class ServicoMotorista : IServicoMotorista
         var motorista = await _repositorio.BuscarPorId(id);
         if (motorista == null)
             return ResultWrapper<object>.NaoEncontrado("Motorista não encontrado.");
+
+        if (await _repositorioViagem.MotoristaPossuiViagens(id))
+            return ResultWrapper<object>.Falha("Não é possível excluir: o motorista possui viagens registradas.");
 
         await _repositorio.Remover(motorista);
         return ResultWrapper<object>.Ok(null, "Motorista removido com sucesso!");

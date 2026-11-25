@@ -9,10 +9,12 @@ namespace GestaoLogistica.Application.Servicos;
 public class ServicoCliente : IServicoCliente
 {
     private readonly IRepositorioCliente _repositorio;
+    private readonly IRepositorioViagem _repositorioViagem;
 
-    public ServicoCliente(IRepositorioCliente repositorio)
+    public ServicoCliente(IRepositorioCliente repositorio, IRepositorioViagem repositorioViagem)
     {
         _repositorio = repositorio;
+        _repositorioViagem = repositorioViagem;
     }
 
     public async Task<ResultWrapper<List<ClienteDto>>> Listar()
@@ -57,6 +59,9 @@ public class ServicoCliente : IServicoCliente
         var cliente = await _repositorio.BuscarPorId(id);
         if (cliente == null)
             return ResultWrapper<object>.NaoEncontrado("Cliente não encontrado.");
+
+        if (await _repositorioViagem.ClientePossuiViagens(id))
+            return ResultWrapper<object>.Falha("Não é possível excluir: o cliente possui viagens registradas.");
 
         await _repositorio.Remover(cliente);
         return ResultWrapper<object>.Ok(null, "Cliente removido com sucesso!");

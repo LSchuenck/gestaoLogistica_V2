@@ -11,11 +11,13 @@ public class ServicoVeiculo : IServicoVeiculo
 {
     private readonly IRepositorioVeiculo _repositorio;
     private readonly IRepositorioTransportadora _repositorioTransportadora;
+    private readonly IRepositorioViagem _repositorioViagem;
 
-    public ServicoVeiculo(IRepositorioVeiculo repositorio, IRepositorioTransportadora repositorioTransportadora)
+    public ServicoVeiculo(IRepositorioVeiculo repositorio, IRepositorioTransportadora repositorioTransportadora, IRepositorioViagem repositorioViagem)
     {
         _repositorio = repositorio;
         _repositorioTransportadora = repositorioTransportadora;
+        _repositorioViagem = repositorioViagem;
     }
 
     public async Task<ResultWrapper<List<VeiculoDto>>> Listar()
@@ -75,6 +77,9 @@ public class ServicoVeiculo : IServicoVeiculo
         if (veiculo == null)
             return ResultWrapper<VeiculoDto>.NaoEncontrado("Veículo não encontrado.");
 
+        if (await _repositorioViagem.VeiculoEstaEmViagem(id))
+            return ResultWrapper<VeiculoDto>.Falha("O veículo está em uma viagem. Conclua ou cancele a viagem primeiro.");
+
         veiculo.Status = novoStatus;
         await _repositorio.Atualizar(veiculo);
 
@@ -89,6 +94,9 @@ public class ServicoVeiculo : IServicoVeiculo
 
         if (veiculo.Status == StatusVeiculo.EmViagem)
             return ResultWrapper<object>.Falha("Não é possível excluir: o veículo está em viagem.");
+
+        if (await _repositorioViagem.VeiculoPossuiViagens(id))
+            return ResultWrapper<object>.Falha("Não é possível excluir: o veículo possui viagens registradas.");
 
         await _repositorio.Remover(veiculo);
         return ResultWrapper<object>.Ok(null, "Veículo removido com sucesso!");

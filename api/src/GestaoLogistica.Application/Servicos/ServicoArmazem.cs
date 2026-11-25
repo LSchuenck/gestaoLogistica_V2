@@ -9,10 +9,12 @@ namespace GestaoLogistica.Application.Servicos;
 public class ServicoArmazem : IServicoArmazem
 {
     private readonly IRepositorioArmazem _repositorio;
+    private readonly IRepositorioViagem _repositorioViagem;
 
-    public ServicoArmazem(IRepositorioArmazem repositorio)
+    public ServicoArmazem(IRepositorioArmazem repositorio, IRepositorioViagem repositorioViagem)
     {
         _repositorio = repositorio;
+        _repositorioViagem = repositorioViagem;
     }
 
     public async Task<ResultWrapper<List<ArmazemDto>>> Listar()
@@ -64,6 +66,9 @@ public class ServicoArmazem : IServicoArmazem
 
         if (await _repositorio.PossuiEstoqueOuMovimentacoes(id))
             return ResultWrapper<object>.Falha("Não é possível excluir: existem produtos ou movimentações neste armazém.");
+
+        if (await _repositorioViagem.ArmazemPossuiViagens(id))
+            return ResultWrapper<object>.Falha("Não é possível excluir: o armazém possui viagens registradas.");
 
         await _repositorio.Remover(armazem);
         return ResultWrapper<object>.Ok(null, "Armazém removido com sucesso!");

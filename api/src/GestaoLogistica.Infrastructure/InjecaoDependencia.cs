@@ -28,6 +28,7 @@ public static class InjecaoDependencia
         servicos.AddScoped<IRepositorioArmazem, RepositorioArmazem>();
         servicos.AddScoped<IRepositorioProduto, RepositorioProduto>();
         servicos.AddScoped<IRepositorioEstoque, RepositorioEstoque>();
+        servicos.AddScoped<IRepositorioViagem, RepositorioViagem>();
 
         servicos.AddScoped<ICriptografiaSenha, CriptografiaSenhaBCrypt>();
         servicos.AddScoped<IGeradorToken, GeradorTokenJwt>();

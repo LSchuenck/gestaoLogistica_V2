@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GestaoLogistica.API.Controllers;
 
-// A lista é liberada para todos porque a tela de Estoque usa; o resto é só para ADMIN e GERENTE
+// A lista é liberada para todos porque as telas de Estoque e Viagens usam; o resto é só para ADMIN e GERENTE
 [Route("api/armazens")]
 public class ArmazensController : ApiControllerBase
 {

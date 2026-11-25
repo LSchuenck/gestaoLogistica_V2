@@ -20,6 +20,7 @@ public static class InjecaoDependencia
         servicos.AddScoped<IServicoArmazem, ServicoArmazem>();
         servicos.AddScoped<IServicoProduto, ServicoProduto>();
         servicos.AddScoped<IServicoEstoque, ServicoEstoque>();
+        servicos.AddScoped<IServicoViagem, ServicoViagem>();
 
         return servicos;
     }

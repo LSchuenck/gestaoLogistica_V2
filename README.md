@@ -24,6 +24,7 @@ Módulos:
 | Armazéns | CRUD com endereço | Não pode ser excluído se tiver produtos com saldo ou movimentações |
 | Produtos | CRUD | Indica produto vencido e estoque crítico (menos de 10 unidades no total); não exclui produto com saldo ou movimentações |
 | Estoque | Entrada/saída por armazém, saldos e histórico | Quantidade maior que zero; saída não pode ser maior que o saldo do armazém; saldo e histórico são gravados juntos, com o produto travado no banco (duas saídas ao mesmo tempo não furam o saldo); registra o usuário que fez a movimentação |
+| Viagens | Iniciar, avançar, concluir e cancelar, de um armazém até um cliente | Veículo disponível; motorista com CNH válida, da mesma transportadora e sem outra viagem; só conclui depois de avançar; o veículo fica EM_VIAGEM e volta a DISPONIVEL no fim; não exclui veículo, motorista, cliente ou armazém com viagens |
 
 Permissões por perfil (as mesmas do sistema original):
 
@@ -31,7 +32,7 @@ Permissões por perfil (as mesmas do sistema original):
 |---|---|
 | ADMIN | Tudo |
 | GERENTE | Tudo, menos Usuários |
-| OPERADOR | Somente Estoque |
+| OPERADOR | Somente Estoque e Viagens |
 
 ## Tecnologias
 
@@ -195,7 +196,7 @@ Acesse `http://localhost:5173`. O endereço da API está no arquivo `front/.env`
 |---|---|---|
 | admin@gestao.com | a que você definiu (`SENHA_ADMIN` no `.env` do Docker, ou `AdministradorInicial:Senha` sem Docker) | ADMIN |
 
-Se o banco já existia antes do campo `TrocarSenha`, recrie-o ou rode: `ALTER TABLE Usuarios ADD COLUMN TrocarSenha tinyint(1) NOT NULL DEFAULT 0;`
+Se o banco já existia em uma versão anterior, recrie-o ou execute o que faltar de `api/atualizar_banco.sql`.
 
 Essa senha só é usada quando o banco é criado. Depois, altere pela tela de Usuários.
 
@@ -260,7 +261,7 @@ Na tela de Transportadoras, abaixo do título, aparece a origem dos dados (cache
 
 ## Principais endpoints
 
-Todos começam com `http://localhost:5080/api`. Todos exigem token, exceto o login. Os cadastros exigem perfil ADMIN ou GERENTE, mas a lista de produtos e a de armazéns são liberadas para o OPERADOR, porque a tela de Estoque usa. O estoque é liberado para todos.
+Todos começam com `http://localhost:5080/api`. Todos exigem token, exceto o login. Os cadastros exigem perfil ADMIN ou GERENTE, mas as listas de produtos, armazéns, clientes, veículos e motoristas são liberadas para o OPERADOR, porque as telas de Estoque e Viagens usam. Estoque e viagens são liberados para todos.
 
 | Método | Endpoint | Descrição |
 |---|---|---|
@@ -286,6 +287,10 @@ Todos começam com `http://localhost:5080/api`. Todos exigem token, exceto o log
 | GET | `/estoque` | Saldo de cada produto em cada armazém |
 | GET | `/estoque/movimentacoes` | Últimas 20 movimentações |
 | POST | `/estoque/movimentacoes` | Registrar entrada ou saída |
+| GET / POST | `/viagens` | Listar / iniciar viagem |
+| PATCH | `/viagens/{id}/avancar` | Iniciada → em trânsito |
+| PATCH | `/viagens/{id}/concluir` | Em trânsito → concluída |
+| PATCH | `/viagens/{id}/cancelar` | Cancelar uma viagem em andamento |
 
 ## Exemplos de requisições
 
@@ -391,7 +396,7 @@ Content-Type: application/json
 
 ## Requisitos do front-end (Web III)
 
-- Páginas com endereço próprio via **Vue Router** (`/transportadoras`, `/motoristas`, `/veiculos`, `/clientes`, `/armazens`, `/produtos`, `/estoque`, `/usuarios`).
+- Páginas com endereço próprio via **Vue Router** (`/transportadoras`, `/motoristas`, `/veiculos`, `/clientes`, `/armazens`, `/produtos`, `/estoque`, `/viagens`, `/usuarios`).
 - Estado em **stores Pinia** (uma por módulo, mais `auth` e `mensagem`).
 - **Feedback** após toda operação: `v-snackbar` verde (sucesso) ou vermelho (erro), com a mensagem que a API devolveu.
 - Usabilidade: tabelas `v-data-table` com busca, ordenação e paginação; formulários em janelas (`v-dialog`) com validação dos campos; confirmação antes de excluir; status com `v-chip` colorido; menu lateral; layout responsivo.
