@@ -65,7 +65,9 @@ public class ServicoViagem : IServicoViagem
             ArmazemId = dados.ArmazemId,
             ClienteId = dados.ClienteId,
             VeiculoId = dados.VeiculoId,
-            MotoristaId = dados.MotoristaId
+            MotoristaId = dados.MotoristaId,
+            DistanciaKm = Math.Round(dados.DistanciaKm, 2),
+            ValorPorKm = Math.Round(dados.ValorPorKm, 2)
         };
 
         veiculo.Status = StatusVeiculo.EmViagem;

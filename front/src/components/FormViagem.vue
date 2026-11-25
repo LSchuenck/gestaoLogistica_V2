@@ -6,7 +6,8 @@
     import { useVeiculoStore } from '@/stores/veiculo';
     import { useMotoristaStore } from '@/stores/motorista';
     import { useMensagemStore } from '@/stores/mensagem';
-    import { obrigatorio } from '@/utils/formulario';
+    import { obrigatorio, maiorQueZero } from '@/utils/formulario';
+    import { formatarMoeda } from '@/utils/formatacao';
 
     const emit = defineEmits(['fechar']);
 
@@ -23,8 +24,13 @@
         armazemId: null,
         clienteId: null,
         veiculoId: null,
-        motoristaId: null
+        motoristaId: null,
+        distanciaKm: '',
+        valorPorKm: ''
     });
+
+    // Mostra o faturamento enquanto o usuário digita
+    const faturamento = computed(() => Number(item.value.distanciaKm) * Number(item.value.valorPorKm));
 
     const veiculosDisponiveis = computed(() =>
         storeVeiculo.veiculos.filter(v => v.status === 'DISPONIVEL'));
@@ -53,7 +59,11 @@
 
         salvando.value = true;
         try {
-            const resposta = await storeViagem.iniciarViagem(item.value);
+            const resposta = await storeViagem.iniciarViagem({
+                ...item.value,
+                distanciaKm: Number(item.value.distanciaKm),
+                valorPorKm: Number(item.value.valorPorKm)
+            });
             mensagemStore.mostrarSucesso(resposta.mensagem);
             emit('fechar');
         } catch (error) {
@@ -78,6 +88,17 @@
                 <v-select v-model="item.motoristaId" :items="motoristasDoVeiculo" item-title="nome" item-value="id"
                     label="Motorista *" :rules="[obrigatorio]" :disabled="!item.veiculoId" density="compact"
                     no-data-text="Nenhum motorista com CNH válida nesta transportadora"></v-select>
+                <v-row density="compact">
+                    <v-col cols="12" sm="6">
+                        <v-text-field v-model="item.distanciaKm" type="number" min="0" step="0.01" label="Distância (km) *"
+                            :rules="[maiorQueZero]" density="compact"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                        <v-text-field v-model="item.valorPorKm" type="number" min="0" step="0.01" label="Valor do frete por km (R$) *"
+                            :rules="[maiorQueZero]" density="compact"></v-text-field>
+                    </v-col>
+                </v-row>
+                <div>Faturamento da viagem: <strong>{{ formatarMoeda(faturamento) }}</strong></div>
 
                 <div class="d-flex justify-end mt-2">
                     <v-btn type="button" class="mr-2" @click="emit('fechar')">Cancelar</v-btn>

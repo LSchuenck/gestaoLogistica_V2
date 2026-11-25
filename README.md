@@ -24,7 +24,7 @@ Módulos:
 | Armazéns | CRUD com endereço | Não pode ser excluído se tiver produtos com saldo ou movimentações |
 | Produtos | CRUD | Indica produto vencido e estoque crítico (menos de 10 unidades no total); não exclui produto com saldo ou movimentações |
 | Estoque | Entrada/saída por armazém, saldos e histórico | Quantidade maior que zero; saída não pode ser maior que o saldo do armazém; saldo e histórico são gravados juntos, com o produto travado no banco (duas saídas ao mesmo tempo não furam o saldo); registra o usuário que fez a movimentação |
-| Viagens | Iniciar, avançar, concluir e cancelar, de um armazém até um cliente | Veículo disponível; motorista com CNH válida, da mesma transportadora e sem outra viagem; só conclui depois de avançar; o veículo fica EM_VIAGEM e volta a DISPONIVEL no fim; não exclui veículo, motorista, cliente ou armazém com viagens |
+| Viagens | Iniciar, avançar, concluir e cancelar, de um armazém até um cliente | Veículo disponível; motorista com CNH válida, da mesma transportadora e sem outra viagem; só conclui depois de avançar; faturamento = distância (km) x valor do frete por km, e viagem cancelada não fatura; o veículo fica EM_VIAGEM e volta a DISPONIVEL no fim; não exclui veículo, motorista, cliente ou armazém com viagens |
 
 Permissões por perfil (as mesmas do sistema original):
 

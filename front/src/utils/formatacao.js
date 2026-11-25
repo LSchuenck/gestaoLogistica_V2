@@ -19,6 +19,11 @@ export function formatarNumero(numero) {
     return Number(numero).toLocaleString('pt-BR');
 }
 
+// 1290 -> "R$ 1.290,00"
+export function formatarMoeda(valor) {
+    return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
 // Lista de UFs para os campos de endereço
 export const estados = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
     'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];

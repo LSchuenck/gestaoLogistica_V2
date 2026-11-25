@@ -5,7 +5,7 @@ import { onMounted, ref } from 'vue';
 import { useViagemStore } from '@/stores/viagem';
 import { useMensagemStore } from '@/stores/mensagem';
 import { storeToRefs } from 'pinia';
-import { formatarDataHora } from '@/utils/formatacao';
+import { formatarDataHora, formatarMoeda, formatarNumero } from '@/utils/formatacao';
 
 const storeViagem = useViagemStore();
 const mensagemStore = useMensagemStore();
@@ -28,10 +28,10 @@ const statusViagem = {
 
 const cabecalhos = [
     { title: 'Nº', key: 'id' },
-    { title: 'Origem', key: 'origem' },
-    { title: 'Destino', key: 'destino' },
+    { title: 'Origem / Destino', key: 'origem', value: v => `${v.origem} → ${v.destino}` },
     { title: 'Veículo / Motorista', key: 'veiculo', value: v => `${v.veiculo} - ${v.motorista}` },
     { title: 'Saída / Chegada', key: 'dataSaida' },
+    { title: 'Faturamento', key: 'faturamento' },
     { title: 'Status', key: 'status' },
     { title: 'Ações', key: 'acoes', sortable: false, align: 'end' },
 ];
@@ -87,16 +87,21 @@ const confirmarCancelamento = (viagem) => {
                     <div class="text-no-wrap">{{ formatarDataHora(item.dataSaida) }}</div>
                     <div class="text-no-wrap">{{ formatarDataHora(item.dataChegada) }}</div>
                 </template>
+                <template v-slot:item.faturamento="{ item }">
+                    <div class="text-no-wrap">{{ formatarMoeda(item.faturamento) }}</div>
+                    <div class="text-caption">{{ formatarNumero(item.distanciaKm) }} km x {{ formatarMoeda(item.valorPorKm) }}</div>
+                </template>
                 <template v-slot:item.status="{ item }">
                     <v-chip :color="statusViagem[item.status].cor" size="small">{{ statusViagem[item.status].texto }}</v-chip>
                 </template>
                 <template v-slot:item.acoes="{ item }">
-                    <div v-if="emAndamento(item)" class="d-flex justify-end ga-1">
+                    <div v-if="emAndamento(item)" class="d-flex justify-end align-center ga-1">
                         <v-btn size="x-small" color="primary" :disabled="item.status !== 'INICIADA'"
                             @click="avancarViagem(item)">Avançar</v-btn>
                         <v-btn size="x-small" color="success" :disabled="item.status !== 'EM_TRANSITO'"
                             @click="concluirViagem(item)">Concluir</v-btn>
-                        <v-btn size="x-small" color="error" @click="confirmarCancelamento(item)">Cancelar</v-btn>
+                        <v-btn size="x-small" color="error" variant="text" icon="mdi-close" title="Cancelar viagem"
+                            @click="confirmarCancelamento(item)"></v-btn>
                     </div>
                 </template>
             </v-data-table>

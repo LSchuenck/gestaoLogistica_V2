@@ -74,6 +74,8 @@ public class ContextoBanco : DbContext
             .HasForeignKey(m => m.UsuarioId).OnDelete(DeleteBehavior.Restrict);
 
         // Viagem: impede apagar armazém, cliente, veículo ou motorista que tenha viagem
+        modelo.Entity<Viagem>().Property(v => v.DistanciaKm).HasPrecision(10, 2);
+        modelo.Entity<Viagem>().Property(v => v.ValorPorKm).HasPrecision(10, 2);
         modelo.Entity<Viagem>()
             .HasOne(v => v.Armazem).WithMany()
             .HasForeignKey(v => v.ArmazemId).OnDelete(DeleteBehavior.Restrict);

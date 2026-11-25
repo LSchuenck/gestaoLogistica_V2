@@ -20,3 +20,7 @@ CREATE TABLE IF NOT EXISTS Viagens (
     CONSTRAINT FK_Viagens_Veiculos_VeiculoId FOREIGN KEY (VeiculoId) REFERENCES Veiculos (Id) ON DELETE RESTRICT,
     CONSTRAINT FK_Viagens_Motoristas_MotoristaId FOREIGN KEY (MotoristaId) REFERENCES Motoristas (Id) ON DELETE RESTRICT
 );
+
+-- Distância e valor do frete da viagem
+ALTER TABLE Viagens ADD COLUMN DistanciaKm decimal(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE Viagens ADD COLUMN ValorPorKm decimal(10,2) NOT NULL DEFAULT 0;
