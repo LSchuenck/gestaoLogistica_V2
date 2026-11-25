@@ -42,20 +42,21 @@ public class SalvarMotoristaDto
     public int TransportadoraId { get; set; }
 
     [Required(ErrorMessage = "Informe o nome.")]
-    [MaxLength(150)]
+    [MaxLength(150, ErrorMessage = "O campo nome aceita no máximo 150 caracteres.")]
     public string Nome { get; set; } = string.Empty;
 
-    [MaxLength(14)]
+    [MaxLength(14, ErrorMessage = "O campo CPF aceita no máximo 14 caracteres.")]
     public string? Cpf { get; set; }
 
     [Required(ErrorMessage = "Informe a CNH.")]
-    [MaxLength(20)]
+    [MaxLength(20, ErrorMessage = "O campo CNH aceita no máximo 20 caracteres.")]
     public string Cnh { get; set; } = string.Empty;
 
-    [MaxLength(5)]
+    [MaxLength(5, ErrorMessage = "O campo categoria da CNH aceita no máximo 5 caracteres.")]
     public string? CategoriaCnh { get; set; }
 
     public DateOnly? ValidadeCnh { get; set; }
 
+    [MaxLength(20, ErrorMessage = "O campo telefone aceita no máximo 20 caracteres.")]
     public string? Telefone { get; set; }
 }

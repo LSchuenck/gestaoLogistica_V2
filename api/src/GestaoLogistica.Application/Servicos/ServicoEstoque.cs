@@ -41,6 +41,13 @@ public class ServicoEstoque : IServicoEstoque
     // Registra uma ENTRADA (aumenta o saldo) ou uma SAIDA (diminui o saldo) de um produto em um armazém
     public async Task<ResultWrapper<SaldoEstoqueDto>> RegistrarMovimentacao(RegistrarMovimentacaoDto dados, int idUsuarioLogado)
     {
+        return await _repositorio.ExecutarComProdutoTravado(dados.ProdutoId,
+            () => AplicarMovimentacao(dados, idUsuarioLogado));
+    }
+
+    // Confere as regras, atualiza o saldo e grava o histórico
+    private async Task<ResultWrapper<SaldoEstoqueDto>> AplicarMovimentacao(RegistrarMovimentacaoDto dados, int idUsuarioLogado)
+    {
         if (!TipoMovimentacao.Todos.Contains(dados.Tipo))
             return ResultWrapper<SaldoEstoqueDto>.Falha("Tipo inválido. Use ENTRADA ou SAIDA.");
 

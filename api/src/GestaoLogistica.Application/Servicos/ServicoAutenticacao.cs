@@ -39,4 +39,10 @@ public class ServicoAutenticacao : IServicoAutenticacao
 
         return ResultWrapper<LoginRespostaDto>.Ok(resposta, "Login realizado com sucesso.");
     }
+
+    public async Task<bool> TokenAindaEhValido(int idUsuario, string perfilDoToken)
+    {
+        var usuario = await _repositorioUsuario.BuscarPorId(idUsuario);
+        return usuario != null && usuario.EstaAtivo() && usuario.Perfil == perfilDoToken;
+    }
 }

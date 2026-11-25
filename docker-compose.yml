@@ -24,6 +24,7 @@ services:
     environment:
       ConnectionStrings__BancoGestaoLogistica: "Server=banco;Port=3306;Database=gestao_logistica_api;User=logistica;Password=${SENHA_BANCO};"
       Jwt__Chave: ${CHAVE_JWT:?preencha o arquivo .env}
+      AdministradorInicial__Senha: ${SENHA_ADMIN:?preencha o arquivo .env}
       TZ: America/Sao_Paulo
     # A API só inicia depois que o banco estiver pronto
     depends_on:

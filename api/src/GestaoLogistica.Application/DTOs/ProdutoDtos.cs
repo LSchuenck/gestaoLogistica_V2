@@ -33,13 +33,13 @@ public class ProdutoDto
 public class SalvarProdutoDto
 {
     [Required(ErrorMessage = "Informe a descrição.")]
-    [MaxLength(200)]
+    [MaxLength(200, ErrorMessage = "O campo descrição aceita no máximo 200 caracteres.")]
     public string Descricao { get; set; } = string.Empty;
 
-    [Range(0, double.MaxValue, ErrorMessage = "O peso não pode ser negativo.")]
+    [Range(0, 99999999.99, ErrorMessage = "O peso deve ficar entre 0 e 99.999.999,99.")]
     public decimal? Peso { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "O volume não pode ser negativo.")]
+    [Range(0, 99999999.99, ErrorMessage = "O volume deve ficar entre 0 e 99.999.999,99.")]
     public decimal? Volume { get; set; }
 
     public DateOnly? Validade { get; set; }

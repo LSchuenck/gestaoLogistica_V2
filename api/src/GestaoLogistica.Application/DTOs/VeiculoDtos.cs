@@ -36,16 +36,16 @@ public class SalvarVeiculoDto
     public int TransportadoraId { get; set; }
 
     [Required(ErrorMessage = "Informe a placa.")]
-    [MaxLength(10)]
+    [MaxLength(10, ErrorMessage = "O campo placa aceita no máximo 10 caracteres.")]
     public string Placa { get; set; } = string.Empty;
 
-    [MaxLength(100)]
+    [MaxLength(100, ErrorMessage = "O campo modelo aceita no máximo 100 caracteres.")]
     public string? Modelo { get; set; }
 
-    [MaxLength(50)]
+    [MaxLength(50, ErrorMessage = "O campo tipo do veículo aceita no máximo 50 caracteres.")]
     public string? TipoVeiculo { get; set; }
 
-    [Range(0, double.MaxValue, ErrorMessage = "A capacidade não pode ser negativa.")]
+    [Range(0, 99999999.99, ErrorMessage = "A capacidade deve ficar entre 0 e 99.999.999,99.")]
     public decimal CapacidadeCarga { get; set; }
 }
 

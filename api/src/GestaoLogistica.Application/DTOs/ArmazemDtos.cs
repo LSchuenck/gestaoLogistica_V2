@@ -23,8 +23,9 @@ public class ArmazemDto
 public class SalvarArmazemDto
 {
     [Required(ErrorMessage = "Informe o nome do armazém.")]
-    [MaxLength(100)]
+    [MaxLength(100, ErrorMessage = "O campo nome aceita no máximo 100 caracteres.")]
     public string Nome { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Informe o endereço.")]
     public EnderecoDto Endereco { get; set; } = new();
 }

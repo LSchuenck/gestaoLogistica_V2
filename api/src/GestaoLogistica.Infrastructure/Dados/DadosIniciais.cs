@@ -7,7 +7,7 @@ namespace GestaoLogistica.Infrastructure.Dados;
 // Cria o banco (se não existir) e insere os dados de exemplo do sistema original
 public static class DadosIniciais
 {
-    public static void CriarBancoEPopular(ContextoBanco contexto, ICriptografiaSenha criptografiaSenha)
+    public static void CriarBancoEPopular(ContextoBanco contexto, ICriptografiaSenha criptografiaSenha, string? senhaAdministrador)
     {
         contexto.Database.EnsureCreated();
 
@@ -15,11 +15,14 @@ public static class DadosIniciais
         if (contexto.Usuarios.Any())
             return;
 
+        if (string.IsNullOrWhiteSpace(senhaAdministrador) || senhaAdministrador.Length < 6)
+            throw new InvalidOperationException("Configure 'AdministradorInicial:Senha' com pelo menos 6 caracteres (veja o README).");
+
         contexto.Usuarios.Add(new Usuario
         {
             Nome = "Administrador",
             Email = "admin@gestao.com",
-            SenhaHash = criptografiaSenha.GerarHash("admin123"),
+            SenhaHash = criptografiaSenha.GerarHash(senhaAdministrador),
             Perfil = PerfisUsuario.Administrador
         });
 

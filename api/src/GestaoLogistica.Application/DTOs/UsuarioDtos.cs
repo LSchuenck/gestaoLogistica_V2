@@ -31,16 +31,18 @@ public class UsuarioDto
 public class SalvarUsuarioDto
 {
     [Required(ErrorMessage = "Informe o nome.")]
-    [MaxLength(100)]
+    [MaxLength(100, ErrorMessage = "O campo nome aceita no máximo 100 caracteres.")]
     public string Nome { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe o e-mail.")]
     [EmailAddress(ErrorMessage = "E-mail inválido.")]
+    [MaxLength(150, ErrorMessage = "O campo e-mail aceita no máximo 150 caracteres.")]
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe o perfil.")]
     public string Perfil { get; set; } = string.Empty;
 
     // Obrigatória no cadastro; na alteração, se vier vazia a senha atual é mantida
+    [MaxLength(72, ErrorMessage = "O campo senha aceita no máximo 72 caracteres.")]
     public string? Senha { get; set; }
 }

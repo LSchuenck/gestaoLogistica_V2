@@ -33,21 +33,23 @@ public class TransportadoraDto
 public class SalvarTransportadoraDto
 {
     [Required(ErrorMessage = "Informe o CNPJ.")]
-    [MaxLength(18)]
+    [MaxLength(18, ErrorMessage = "O campo CNPJ aceita no máximo 18 caracteres.")]
     public string Cnpj { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe a razão social.")]
-    [MaxLength(150)]
+    [MaxLength(150, ErrorMessage = "O campo razão social aceita no máximo 150 caracteres.")]
     public string RazaoSocial { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe o nome fantasia.")]
-    [MaxLength(150)]
+    [MaxLength(150, ErrorMessage = "O campo nome fantasia aceita no máximo 150 caracteres.")]
     public string NomeFantasia { get; set; } = string.Empty;
 
+    [MaxLength(20, ErrorMessage = "O campo telefone aceita no máximo 20 caracteres.")]
     public string? Telefone { get; set; }
 
-    [MaxLength(100)]
+    [MaxLength(100, ErrorMessage = "O campo e-mail aceita no máximo 100 caracteres.")]
     public string? Email { get; set; }
 
+    [Required(ErrorMessage = "Informe o endereço.")]
     public EnderecoDto Endereco { get; set; } = new();
 }

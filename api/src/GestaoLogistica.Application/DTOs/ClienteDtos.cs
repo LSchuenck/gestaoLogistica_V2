@@ -27,13 +27,15 @@ public class ClienteDto
 public class SalvarClienteDto
 {
     [Required(ErrorMessage = "Informe o nome.")]
-    [MaxLength(150)]
+    [MaxLength(150, ErrorMessage = "O campo nome aceita no máximo 150 caracteres.")]
     public string Nome { get; set; } = string.Empty;
 
-    [MaxLength(18)]
+    [MaxLength(18, ErrorMessage = "O campo CPF/CNPJ aceita no máximo 18 caracteres.")]
     public string? CpfCnpj { get; set; }
 
+    [MaxLength(20, ErrorMessage = "O campo telefone aceita no máximo 20 caracteres.")]
     public string? Telefone { get; set; }
 
+    [Required(ErrorMessage = "Informe o endereço.")]
     public EnderecoDto Endereco { get; set; } = new();
 }

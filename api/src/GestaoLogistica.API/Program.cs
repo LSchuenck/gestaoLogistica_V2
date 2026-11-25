@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using GestaoLogistica.API.Middlewares;
 using GestaoLogistica.Application;
@@ -22,13 +23,27 @@ builder.Services.AdicionarCamadaAplicacao();
 builder.Services.AdicionarCamadaInfraestrutura(configuracao);
 
 // ---------- Controllers + erros de validação no padrão ResultWrapper ----------
-builder.Services.AddControllers().ConfigureApiBehaviorOptions(opcoes =>
+builder.Services.AddControllers(opcoes =>
 {
+    opcoes.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+
+    // Mensagens padrão em português
+    var mensagens = opcoes.ModelBindingMessageProvider;
+    mensagens.SetMissingRequestBodyRequiredValueAccessor(() => "Envie os dados no corpo da requisição.");
+    mensagens.SetNonPropertyAttemptedValueIsInvalidAccessor(valor => $"O valor '{valor}' não é válido.");
+    mensagens.SetAttemptedValueIsInvalidAccessor((valor, campo) => $"O valor '{valor}' não é válido para {campo}.");
+})
+.AddJsonOptions(opcoes => opcoes.AllowInputFormatterExceptionMessages = false)
+.ConfigureApiBehaviorOptions(opcoes =>
+{
+    // Erros como 415 ficam sem corpo aqui e são preenchidos pelo UseStatusCodePages
+    opcoes.SuppressMapClientErrors = true;
+
     opcoes.InvalidModelStateResponseFactory = contexto =>
     {
         var erros = contexto.ModelState.Values
             .SelectMany(valor => valor.Errors)
-            .Select(erro => erro.ErrorMessage)
+            .Select(erro => string.IsNullOrEmpty(erro.ErrorMessage) ? "JSON inválido ou campo com formato incorreto." : erro.ErrorMessage)
             .ToList();
 
         return new BadRequestObjectResult(ResultWrapper<object>.Falha("Dados inválidos.", erros));
@@ -55,6 +70,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // Respostas 401 e 403 também no padrão ResultWrapper
         opcoes.Events = new JwtBearerEvents
         {
+            // Recusa o token de quem foi desativado, excluído ou trocou de perfil depois do login
+            OnTokenValidated = async contexto =>
+            {
+                var servico = contexto.HttpContext.RequestServices.GetRequiredService<IServicoAutenticacao>();
+                var idUsuario = int.Parse(contexto.Principal!.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                var perfil = contexto.Principal!.FindFirstValue(ClaimTypes.Role)!;
+
+                if (!await servico.TokenAindaEhValido(idUsuario, perfil))
+                    contexto.Fail("Usuário sem acesso.");
+            },
             OnChallenge = async contexto =>
             {
                 contexto.HandleResponse();
@@ -88,11 +113,24 @@ using (var escopo = app.Services.CreateScope())
 {
     var contexto = escopo.ServiceProvider.GetRequiredService<ContextoBanco>();
     var criptografia = escopo.ServiceProvider.GetRequiredService<ICriptografiaSenha>();
-    DadosIniciais.CriarBancoEPopular(contexto, criptografia);
+    DadosIniciais.CriarBancoEPopular(contexto, criptografia, configuracao["AdministradorInicial:Senha"]);
 }
 
 // ---------- Pipeline das requisições ----------
 app.UseMiddleware<TratamentoErrosMiddleware>();
+app.UseStatusCodePages(async contexto =>
+{
+    // Respostas que ficariam sem corpo (rota inexistente, método errado...) também no padrão ResultWrapper
+    var resposta = contexto.HttpContext.Response;
+    var mensagem = resposta.StatusCode switch
+    {
+        404 => "Endereço não encontrado na API.",
+        405 => "Método HTTP não permitido neste endereço.",
+        415 => "Formato não suportado. Envie os dados em JSON.",
+        _ => "Não foi possível realizar a operação."
+    };
+    await resposta.WriteAsJsonAsync(ResultWrapper<object>.Falha(mensagem, null, resposta.StatusCode));
+});
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();

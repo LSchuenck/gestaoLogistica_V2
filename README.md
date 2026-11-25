@@ -15,14 +15,14 @@ Módulos:
 
 | Módulo | O que faz | Principais regras de negócio |
 |---|---|---|
-| Usuários | Cadastro, edição, ativação e exclusão (somente ADMIN) | E-mail único; perfis ADMIN, GERENTE e OPERADOR; o administrador master (id 1) não pode ser excluído nem desativado; ninguém exclui ou desativa a própria conta; não exclui usuário com movimentações de estoque; usuário inativo não faz login; senha com no mínimo 6 caracteres guardada com hash BCrypt |
+| Usuários | Cadastro, edição, ativação e exclusão (somente ADMIN) | E-mail único; perfis ADMIN, GERENTE e OPERADOR; o administrador master (id 1) não pode ser excluído, desativado nem perder o perfil ADMIN; ninguém exclui ou desativa a própria conta; não exclui usuário com movimentações de estoque; usuário inativo não faz login; senha com no mínimo 6 caracteres guardada com hash BCrypt |
 | Transportadoras | CRUD + ativar/desativar | CNPJ único; não pode ser excluída se tiver motoristas ou veículos |
 | Motoristas | CRUD | Só pode ser ligado a uma transportadora **ativa**; CPF e CNH únicos; indica CNH vencida |
 | Veículos | CRUD + troca de status | Placa única; transportadora ativa; status só DISPONIVEL, EM_VIAGEM ou MANUTENCAO; não exclui veículo em viagem |
 | Clientes | CRUD com endereço | — |
 | Armazéns | CRUD com endereço | Não pode ser excluído se tiver produtos com saldo ou movimentações |
 | Produtos | CRUD | Indica produto vencido e estoque crítico (menos de 10 unidades no total); não exclui produto com saldo ou movimentações |
-| Estoque | Entrada/saída por armazém, saldos e histórico | Quantidade maior que zero; saída não pode ser maior que o saldo do armazém; saldo e histórico são gravados juntos; registra o usuário que fez a movimentação |
+| Estoque | Entrada/saída por armazém, saldos e histórico | Quantidade maior que zero; saída não pode ser maior que o saldo do armazém; saldo e histórico são gravados juntos, com o produto travado no banco (duas saídas ao mesmo tempo não furam o saldo); registra o usuário que fez a movimentação |
 
 ## Tecnologias
 
@@ -64,6 +64,7 @@ Decisões principais:
 - **Domain não depende de ninguém.** As interfaces dos repositórios (`IRepositorioProduto` etc.) ficam no Domain e são implementadas na Infrastructure. Regras simples ficam nas próprias entidades (ex.: `Estoque.TemSaldoSuficiente`, `Motorista.CnhEstaVencida`, `Transportadora.AlternarStatus`).
 - **Os controllers não têm lógica.** Eles só recebem a requisição, chamam o serviço e devolvem o `ResultWrapper`. As regras ficam nos serviços da Application (`ServicoTransportadora`, `ServicoEstoque`...).
 - **Application não conhece BCrypt, JWT nem EF Core.** Ela usa as interfaces `ICriptografiaSenha` e `IGeradorToken`, implementadas na Infrastructure.
+- **Movimentação de estoque com trava:** o `ServicoEstoque` confere o saldo e grava dentro de uma transação com `SELECT ... FOR UPDATE` no produto. Uma movimentação do mesmo produto espera a outra terminar.
 - **Repositório base genérico** (`RepositorioBase<T>`) com o CRUD comum, para não repetir código. Cada repositório específico só acrescenta suas consultas.
 - **Injeção de dependência:** cada camada registra seus serviços (`AdicionarCamadaAplicacao` e `AdicionarCamadaInfraestrutura`).
 - **Endereço** é um *owned type* do EF Core: as colunas ficam na tabela da transportadora, do cliente ou do armazém. No sistema PHP era uma tabela separada; assim o código ficou mais simples.
@@ -144,13 +145,16 @@ copy appsettings.Development.exemplo.json appsettings.Development.json
   "ConnectionStrings": {
     "BancoGestaoLogistica": "Server=localhost;Port=3306;Database=gestao_logistica_api;User=root;Password=SUA_SENHA;"
   },
+  "AdministradorInicial": {
+    "Senha": "SENHA_DO_PRIMEIRO_ADMINISTRADOR"
+  },
   "Jwt": {
     "Chave": "UMA_CHAVE_SECRETA_COM_PELO_MENOS_32_CARACTERES"
   }
 }
 ```
 
-> O `appsettings.Development.json` está no `.gitignore`: senha do banco e chave do JWT **não vão para o repositório**. Também é possível passar tudo por variáveis de ambiente (`ConnectionStrings__BancoGestaoLogistica` e `Jwt__Chave`).
+> O `appsettings.Development.json` está no `.gitignore`: senha do banco, chave do JWT e senha inicial do administrador **não vão para o repositório**. Também é possível passar tudo por variáveis de ambiente (`ConnectionStrings__BancoGestaoLogistica`, `Jwt__Chave` e `AdministradorInicial__Senha`).
 
 Não é preciso criar o banco: na primeira execução a API cria o banco `gestao_logistica_api`, as tabelas e os dados de exemplo (transportadoras, motoristas, veículos, clientes, armazéns, produtos e estoque).
 
@@ -177,7 +181,9 @@ Acesse `http://localhost:5173`. O endereço da API está no arquivo `front/.env`
 
 | E-mail | Senha | Perfil |
 |---|---|---|
-| admin@gestao.com | admin123 | ADMIN |
+| admin@gestao.com | a que você definiu (`SENHA_ADMIN` no `.env` do Docker, ou `AdministradorInicial:Senha` sem Docker) | ADMIN |
+
+Essa senha só é usada quando o banco é criado. Depois, altere pela tela de Usuários.
 
 ## Padrão de respostas (ResultWrapper)
 
@@ -201,7 +207,7 @@ Todas as respostas da API, de sucesso ou de erro, têm o mesmo formato (classe `
 }
 ```
 
-O código HTTP acompanha o resultado (200, 201, 400, 401, 403, 404, 500). Erros de validação dos DTOs, falta de token (401), falta de permissão (403) e erros inesperados (500, no `TratamentoErrosMiddleware`) também são devolvidos nesse formato.
+O código HTTP acompanha o resultado (200, 201, 400, 401, 403, 404, 500). Erros de validação dos DTOs, falta de token (401), falta de permissão (403), endereço inexistente (404), método não permitido (405), formato não suportado (415) e erros inesperados (500, no `TratamentoErrosMiddleware`) também são devolvidos nesse formato.
 
 ## Autenticação JWT
 
@@ -210,7 +216,8 @@ O código HTTP acompanha o resultado (200, 201, 400, 401, 403, 404, 500). Erros 
 3. Se estiver correto e o usuário estiver ativo, a API gera um token JWT assinado (HMAC-SHA256) com: id, nome, e-mail e perfil. O token vale 60 minutos (`Jwt:ExpiracaoMinutos`).
 4. O front guarda o token no `localStorage` e o axios envia em todas as requisições no cabeçalho `Authorization: Bearer <token>`.
 5. Em cada requisição a API valida assinatura, emissor, público e validade. Sem token válido → **401**. Os endpoints de `/api/usuarios` exigem perfil `ADMIN` (`[Authorize(Roles = "ADMIN")]`) → **403** para os demais perfis.
-6. Se o token expirar, o front recebe 401, limpa o login e volta para a tela de login com o aviso “Sua sessão expirou”.
+6. A API também confere, a cada requisição, se o usuário ainda existe, está ativo e tem o mesmo perfil do token (`TokenAindaEhValido`). Quem foi desativado perde o acesso na hora → **401**.
+7. Se o token expirar, o front recebe 401, limpa o login e volta para a tela de login com o aviso “Sua sessão expirou”.
 
 ## Estratégia de cache
 
@@ -264,7 +271,7 @@ Todos começam com `http://localhost:5080/api`. Todos exigem token, exceto o log
 POST /api/autenticacao/login
 Content-Type: application/json
 
-{ "email": "admin@gestao.com", "senha": "admin123" }
+{ "email": "admin@gestao.com", "senha": "SUA_SENHA" }
 ```
 
 ```json

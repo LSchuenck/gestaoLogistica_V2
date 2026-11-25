@@ -67,6 +67,9 @@ public class ServicoUsuario : IServicoUsuario
         if (erro != null)
             return ResultWrapper<UsuarioDto>.Falha(erro);
 
+        if (usuario.EhAdministradorMaster() && dados.Perfil != PerfisUsuario.Administrador)
+            return ResultWrapper<UsuarioDto>.Falha("O perfil do administrador master não pode ser alterado.");
+
         usuario.Nome = dados.Nome.Trim();
         usuario.Email = dados.Email.Trim();
         usuario.Perfil = dados.Perfil;

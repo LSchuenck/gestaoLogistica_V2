@@ -63,6 +63,6 @@ public class RegistrarMovimentacaoDto
     [Required(ErrorMessage = "Informe o tipo (ENTRADA ou SAIDA).")]
     public string Tipo { get; set; } = string.Empty;
 
-    [Range(1, int.MaxValue, ErrorMessage = "A quantidade deve ser maior que zero.")]
+    [Range(1, 1000000, ErrorMessage = "A quantidade deve ficar entre 1 e 1.000.000.")]
     public int Quantidade { get; set; }
 }
