@@ -2,7 +2,8 @@
     import { ref } from 'vue';
     import { useClienteStore } from '@/stores/cliente';
     import { useMensagemStore } from '@/stores/mensagem';
-    import { obrigatorio, copiarObjeto } from '@/utils/formulario';
+    import { obrigatorio, copiarObjeto, aplicarMascara } from '@/utils/formulario';
+    import { mascaraCpfCnpj, mascaraTelefone } from '@/utils/formatacao';
     import FormEndereco from './FormEndereco.vue';
 
     const props = defineProps(['cliente']);
@@ -52,10 +53,10 @@
                         <v-text-field v-model="item.nome" label="Nome *" :rules="[obrigatorio]" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
-                        <v-text-field v-model="item.cpfCnpj" label="CPF/CNPJ" density="compact"></v-text-field>
+                        <v-text-field v-model="item.cpfCnpj" @update:model-value="aplicarMascara(item, 'cpfCnpj', mascaraCpfCnpj)" maxlength="18" label="CPF/CNPJ" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
-                        <v-text-field v-model="item.telefone" label="Telefone" density="compact"></v-text-field>
+                        <v-text-field v-model="item.telefone" @update:model-value="aplicarMascara(item, 'telefone', mascaraTelefone)" maxlength="15" label="Telefone" density="compact"></v-text-field>
                     </v-col>
                 </v-row>
                 <FormEndereco v-model="item.endereco"></FormEndereco>

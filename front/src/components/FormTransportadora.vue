@@ -2,7 +2,8 @@
     import { ref } from 'vue';
     import { useTransportadoraStore } from '@/stores/transportadora';
     import { useMensagemStore } from '@/stores/mensagem';
-    import { obrigatorio, emailValido, copiarObjeto } from '@/utils/formulario';
+    import { obrigatorio, emailValido, copiarObjeto, aplicarMascara } from '@/utils/formulario';
+    import { mascaraCnpj, mascaraTelefone } from '@/utils/formatacao';
     import FormEndereco from './FormEndereco.vue';
 
     // Se receber uma transportadora é edição; se vier vazio é cadastro
@@ -52,7 +53,7 @@
             <v-form ref="formulario" @submit.prevent="salvar">
                 <v-row dense>
                     <v-col cols="12" sm="6">
-                        <v-text-field v-model="item.cnpj" label="CNPJ *" :rules="[obrigatorio]" density="compact"></v-text-field>
+                        <v-text-field v-model="item.cnpj" @update:model-value="aplicarMascara(item, 'cnpj', mascaraCnpj)" maxlength="18" label="CNPJ *" :rules="[obrigatorio]" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
                         <v-text-field v-model="item.nomeFantasia" label="Nome fantasia *" :rules="[obrigatorio]" density="compact"></v-text-field>
@@ -61,7 +62,7 @@
                         <v-text-field v-model="item.razaoSocial" label="Razão social *" :rules="[obrigatorio]" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
-                        <v-text-field v-model="item.telefone" label="Telefone" density="compact"></v-text-field>
+                        <v-text-field v-model="item.telefone" @update:model-value="aplicarMascara(item, 'telefone', mascaraTelefone)" maxlength="15" label="Telefone" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
                         <v-text-field v-model="item.email" label="E-mail" :rules="[emailValido]" density="compact"></v-text-field>

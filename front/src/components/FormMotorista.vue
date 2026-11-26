@@ -3,7 +3,8 @@
     import { useMotoristaStore } from '@/stores/motorista';
     import { useTransportadoraStore } from '@/stores/transportadora';
     import { useMensagemStore } from '@/stores/mensagem';
-    import { obrigatorio, copiarObjeto } from '@/utils/formulario';
+    import { obrigatorio, copiarObjeto, aplicarMascara } from '@/utils/formulario';
+    import { mascaraCpf, mascaraTelefone } from '@/utils/formatacao';
 
     const props = defineProps(['motorista']);
     const emit = defineEmits(['fechar']);
@@ -78,10 +79,10 @@
                         <v-text-field v-model="item.nome" label="Nome *" :rules="[obrigatorio]" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
-                        <v-text-field v-model="item.cpf" label="CPF" density="compact"></v-text-field>
+                        <v-text-field v-model="item.cpf" @update:model-value="aplicarMascara(item, 'cpf', mascaraCpf)" maxlength="14" label="CPF" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="6">
-                        <v-text-field v-model="item.telefone" label="Telefone" density="compact"></v-text-field>
+                        <v-text-field v-model="item.telefone" @update:model-value="aplicarMascara(item, 'telefone', mascaraTelefone)" maxlength="15" label="Telefone" density="compact"></v-text-field>
                     </v-col>
                     <v-col cols="12" sm="5">
                         <v-text-field v-model="item.cnh" label="CNH *" :rules="[obrigatorio]" density="compact"></v-text-field>
