@@ -100,7 +100,7 @@ Há duas formas: com Docker (mais simples) ou sem Docker (para desenvolver). As 
 
 Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/) aberto.
 
-1. Na pasta do projeto, crie o arquivo de senhas e preencha (ele não vai para o Git):
+1. Na pasta do projeto, crie o arquivo de senhas e preencha:
 
 ```bash
 copy .env.exemplo .env
